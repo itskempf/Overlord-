@@ -1,2 +1,5 @@
-# Overlord-
-It helps you and anyone else know what the hell it is at a glance.
+# Overlord
+
+## Project Description
+
+This repository contains the game server and client for the Overlord project.
