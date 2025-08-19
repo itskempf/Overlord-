@@ -7,9 +7,9 @@ body { font-family: system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif; b
 .nav { flex:1; overflow-y:auto; }
 .nav ul { list-style:none; margin:0; padding:0 0 32px; }
 .nav-section { font-size:11px; text-transform:uppercase; letter-spacing:1px; padding:18px 20px 6px; color:#64748b; font-weight:600; }
-.nav a { display:block; padding:8px 20px; font-size:14px; color:#cbd5e1; border-left:3px solid transparent; border-radius:4px; text-decoration:none; transition:.15s; }
-.nav a:hover { background:#1e252d; color:#fff; }
-.nav a.active { background:#243042; color:#fff; border-left-color:#3b82f6; }
+.nav a, .nav button { display:block; padding:8px 20px; font-size:14px; color:#cbd5e1; border-left:3px solid transparent; border-radius:4px; text-decoration:none; transition:.15s; background:none; width:100%; text-align:left; cursor:pointer; font-family:inherit; font-weight:500; }
+.nav a:hover, .nav button:hover { background:#1e252d; color:#fff; }
+.nav a.active, .nav button.active { background:#243042; color:#fff; border-left-color:#3b82f6; }
 .sidebar-footer { padding:16px 20px; border-top:1px solid #1f242b; }
 .primary-btn { width:100%; background:#2563eb; color:#fff; border:0; padding:10px 14px; border-radius:6px; font-weight:600; font-size:14px; cursor:pointer; box-shadow:0 2px 4px rgba(0,0,0,.4); }
 .primary-btn:hover { background:#1d4ed8; }
