@@ -1,0 +1,27 @@
+{
+  "name": "overlord-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Overlord desktop app (Electron + React) with server and shared packages",
+  "license": "MIT",
+  "workspaces": [
+    "client",
+    "server",
+    "shared"
+  ],
+  "scripts": {
+    "postinstall": "echo Workspaces installed",
+    "dev:client": "npm --workspace client run electron:dev",
+    "dev:server": "npm --workspace server run dev",
+    "dev": "concurrently -k \"npm:dev:server\" \"npm:dev:client\"",
+    "build:client": "npm --workspace client run build",
+    "build:server": "npm --workspace server run build",
+    "build:shared": "npm --workspace shared run build",
+    "build": "npm run build:shared && npm run build:server && npm run build:client",
+    "start:server": "npm --workspace server run start",
+    "lint": "npm --workspace client run lint"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
