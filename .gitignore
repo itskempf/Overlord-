@@ -49,3 +49,10 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+
+# ==> OUR CUSTOM RULES <==
+# Visual Studio junk
+.vs/
+
+# Lockfiles
+/package-lock.json
