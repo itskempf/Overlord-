@@ -55,6 +55,21 @@ app.whenReady().then(() => {
     }
   });
 
+  // Create an asynchronous IPC handler for the 'server:writeConfig' channel. It will receive a 'serverPath' and the new 'content'.
+  // This handler should use Node's `fs.writeFileSync` module to overwrite the contents of the config file ('server.cfg') inside the provided serverPath.
+  // It should write the 'content' as a UTF-8 string.
+  // It must include error handling and return a success or failure message to the UI.
+  ipcMain.handle('server:writeConfig', (_event, serverPath, content) => {
+    try {
+      if (!serverPath) return { ok: false, error: 'No path provided' };
+      const cfgPath = path.join(serverPath, 'server.cfg');
+      fs.writeFileSync(cfgPath, content ?? '', 'utf-8');
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
+  });
+
   // Install / update game server using SteamCMD
   ipcMain.handle('steamcmd:installGame', async (_event, appId) => {
     if (!appId || !/^\d+$/.test(String(appId))) {

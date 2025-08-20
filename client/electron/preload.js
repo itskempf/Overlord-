@@ -7,5 +7,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onServerLog: (callback) => {
     ipcRenderer.on('server:log', (_event, line) => callback(line));
   },
-  readConfigFile: (serverPath) => ipcRenderer.invoke('server:readConfig', serverPath)
+  readConfigFile: (serverPath) => ipcRenderer.invoke('server:readConfig', serverPath),
+  writeConfigFile: (serverPath, content) => ipcRenderer.invoke('server:writeConfig', serverPath, content)
 });
