@@ -12,12 +12,14 @@ const SteamCMDManager = () => {
     let mounted = true;
     (async () => {
       try {
-        const path = await (window as any).electronAPI.getSteamCMDPath();
+        const found = await window.electronAPI.getSteamCMDPath();
         if (!mounted) return;
-        if (path) { setIsInstalled(true); setStatus('SteamCMD is ready'); }
+        if (found) { setIsInstalled(true); setStatus('SteamCMD is ready'); }
         else { setIsInstalled(false); setStatus('SteamCMD not found. Please download.'); }
-      } catch (e:any) {
-        if (!mounted) return; setStatus('Error checking SteamCMD: ' + e.message);
+      } catch (e) {
+        if (!mounted) return;
+        const msg = e instanceof Error ? e.message : String(e);
+        setStatus('Error checking SteamCMD: ' + msg);
       }
     })();
     return () => { mounted = false; };
@@ -28,18 +30,19 @@ const SteamCMDManager = () => {
     setDownloading(true);
     setStatus('Downloading... Please wait.');
     try {
-      const res = await (window as any).electronAPI.downloadSteamCMD();
+      const res = await window.electronAPI.downloadSteamCMD();
       if (res?.ok) {
-        const path = await (window as any).electronAPI.getSteamCMDPath();
-        if (path) { setIsInstalled(true); setStatus('SteamCMD is ready'); }
+        const found = await window.electronAPI.getSteamCMDPath();
+        if (found) { setIsInstalled(true); setStatus('SteamCMD is ready'); }
         else { setIsInstalled(false); setStatus('Downloaded but path missing'); }
       } else {
         setIsInstalled(false);
         setStatus('Download failed: ' + (res?.error || 'Unknown error'));
       }
-    } catch (e:any) {
+    } catch (e) {
       setIsInstalled(false);
-      setStatus('Download error: ' + e.message);
+      const msg = e instanceof Error ? e.message : String(e);
+      setStatus('Download error: ' + msg);
     } finally {
       setDownloading(false);
     }

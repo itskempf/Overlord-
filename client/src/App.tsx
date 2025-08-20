@@ -1,7 +1,7 @@
 import * as React from 'react';
 import './App.css';
 import Sidebar, { type PageKey } from './components/Sidebar';
-import InstalledServers, { type InstalledServer } from './components/InstalledServers';
+import { type InstalledServer } from './components/InstalledServers';
 import ServersPage from './pages/ServersPage';
 
 interface NavigatorUADataLike { architecture?: string }
@@ -32,7 +32,7 @@ const ServerDetailPage = ({ server, onBack }: { server: InstalledServer; onBack:
 
   React.useEffect(() => {
     setConfig('Loading config...'); setOriginal('');
-    (async () => { if (window.electronAPI.readConfigFile) { const res = await window.electronAPI.readConfigFile(server.path); if (res.ok) { setConfig(res.content || ''); setOriginal(res.content || ''); } else { setConfig(`Error: ${res.error}`); setOriginal(`Error: ${res.error}`); } } })();
+    (async () => { const res = await window.electronAPI.readConfigFile?.(server.path); if (res?.ok) { setConfig(res.content || ''); setOriginal(res.content || ''); } else if (res) { setConfig(`Error: ${res.error}`); setOriginal(`Error: ${res.error}`); } })();
   }, [server]);
 
   const dirty = config !== original;
@@ -64,10 +64,8 @@ function App() {
 
   const showServers = () => { setSelectedServer(null); setPage('servers'); };
 
-  let content; let title;
-  if (selectedServer) { title = selectedServer.name; content = <ServerDetailPage server={selectedServer} onBack={showServers} />; }
-  else if (page === 'dashboard') { title = 'Dashboard'; content = <Dashboard arch={arch} />; }
-  else { title = 'Servers'; content = <ServersPage onManage={(s) => setSelectedServer(s)} />; }
+  const content = selectedServer ? <ServerDetailPage server={selectedServer} onBack={showServers} /> : (page === 'dashboard' ? <Dashboard arch={arch} /> : <ServersPage onManage={(s) => setSelectedServer(s)} />);
+  const title = selectedServer ? selectedServer.name : (page === 'dashboard' ? 'Dashboard' : 'Servers');
 
   return (
     <div className="app-shell">

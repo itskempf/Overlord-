@@ -2,16 +2,7 @@
 // Uses minimal inline styles (no Tailwind currently configured).
 import { useState, useEffect } from 'react';
 
-export interface ElectronAPIShape {
-  installGameServer: (appId: string) => Promise<{ ok: boolean; error?: string }>;
-  onServerLog: (cb: (line: string) => void) => void;
-  getInstalledServers: () => Promise<{ appId: string; name: string; path: string; installedAt?: number; }[]>;
-  readConfigFile?: (serverPath: string) => Promise<{ ok: boolean; content?: string; error?: string }>;
-  writeConfigFile?: (serverPath: string, content: string) => Promise<{ ok: boolean; error?: string }>;
-
-}
-
-declare global { interface Window { electronAPI: ElectronAPIShape } }
+declare global { interface Window { electronAPI: ElectronAPI } }
 
 const GameInstaller = () => {
   const [appId, setAppId] = useState('');
