@@ -1,8 +1,8 @@
 import * as React from 'react';
 import './App.css';
 import Sidebar, { type PageKey } from './components/Sidebar';
-import GameInstaller from './components/GameInstaller';
 import InstalledServers, { type InstalledServer } from './components/InstalledServers';
+import ServersPage from './pages/ServersPage';
 
 interface NavigatorUADataLike { architecture?: string }
 
@@ -21,13 +21,6 @@ const Dashboard = ({ arch }: { arch: string }) => (
     <div className="panel"><h2>Planned Tasks</h2><div className="empty-state">No tasks scheduled</div></div>
     <div className="panel"><h2>Alerts</h2><div className="empty-state">All clear</div></div>
     <div className="panel"><h2>System</h2><ul className="kv"><li><span>Version</span><span>0.1.0</span></li><li><span>Platform</span><span>{navigator.platform}</span></li><li><span>Arch</span><span>{arch}</span></li></ul></div>
-  </section>
-);
-
-const ServersPage = ({ onManage }: { onManage: (s: InstalledServer) => void }) => (
-  <section style={{ padding: '0 32px 32px', display: 'flex', flexDirection: 'column', gap: 24 }}>
-    <div className="panel" style={{ width: '100%' }}><GameInstaller /></div>
-    <div className="panel" style={{ width: '100%' }}><InstalledServers onManageServer={onManage} /></div>
   </section>
 );
 

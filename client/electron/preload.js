@@ -8,5 +8,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('server:log', (_event, line) => callback(line));
   },
   readConfigFile: (serverPath) => ipcRenderer.invoke('server:readConfig', serverPath),
-  writeConfigFile: (serverPath, content) => ipcRenderer.invoke('server:writeConfig', serverPath, content)
+  writeConfigFile: (serverPath, content) => ipcRenderer.invoke('server:writeConfig', serverPath, content),
+  getSteamCMDPath: () => ipcRenderer.invoke('steamcmd:getPath'),
+  downloadSteamCMD: () => ipcRenderer.invoke('steamcmd:download')
 });

@@ -2,7 +2,10 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
 const fs = require('fs');
+const https = require('https');
+const os = require('os');
 const Store = require('electron-store');
+const unzipper = require('unzipper');
 
 const store = new Store({
   schema: {
@@ -38,6 +41,38 @@ app.whenReady().then(() => {
   // Return installed servers list
   ipcMain.handle('steamcmd:getInstalledServers', () => {
     return store.get('installedServers', []);
+  });
+
+  ipcMain.handle('steamcmd:getPath', () => {
+    return store.get('steamcmdPath') || null;
+  });
+
+  ipcMain.handle('steamcmd:download', async () => {
+    // Basic Windows-only implementation: download steamcmd.zip and extract
+    try {
+      const platform = os.platform();
+      if (platform !== 'win32') return { ok: false, error: 'SteamCMD auto-download currently only implemented for Windows' };
+      const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'steamcmd-'));
+      const zipPath = path.join(tempDir, 'steamcmd.zip');
+      const destDir = path.join(app.getPath('userData'), 'steamcmd');
+      fs.mkdirSync(destDir, { recursive: true });
+      const url = 'https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip';
+      await new Promise((resolve, reject) => {
+        const file = fs.createWriteStream(zipPath);
+        https.get(url, res => {
+          if (res.statusCode !== 200) { reject(new Error('Failed download: ' + res.statusCode)); return; }
+          res.pipe(file);
+          file.on('finish', () => file.close(resolve));
+        }).on('error', reject);
+      });
+      await fs.createReadStream(zipPath).pipe(unzipper.Extract({ path: destDir })).promise();
+      const exePath = path.join(destDir, 'steamcmd.exe');
+      if (!fs.existsSync(exePath)) return { ok: false, error: 'Extraction failed (steamcmd.exe missing)' };
+      store.set('steamcmdPath', destDir);
+      return { ok: true, path: destDir };
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
   });
 
   // Read server configuration file server.cfg given a server path
