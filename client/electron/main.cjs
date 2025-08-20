@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
+const fs = require('fs');
 const Store = require('electron-store');
 
 const store = new Store({
@@ -37,6 +38,21 @@ app.whenReady().then(() => {
   // Return installed servers list
   ipcMain.handle('steamcmd:getInstalledServers', () => {
     return store.get('installedServers', []);
+  });
+
+  // Read server configuration file server.cfg given a server path
+  ipcMain.handle('server:readConfig', (_event, serverPath) => {
+    try {
+      if (!serverPath) return { ok: false, error: 'No path provided' };
+      const cfgPath = path.join(serverPath, 'server.cfg');
+      if (!fs.existsSync(cfgPath)) {
+        return { ok: false, error: 'Config file not found' };
+      }
+      const content = fs.readFileSync(cfgPath, 'utf-8');
+      return { ok: true, content };
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
   });
 
   // Install / update game server using SteamCMD

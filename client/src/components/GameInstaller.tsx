@@ -2,14 +2,15 @@
 // Uses minimal inline styles (no Tailwind currently configured).
 import React, { useState, useEffect } from 'react';
 
+export interface ElectronAPIShape {
+  installGameServer: (appId: string) => Promise<{ ok: boolean; error?: string }>;
+  onServerLog: (cb: (line: string) => void) => void;
+  getInstalledServers: () => Promise<{ appId: string; name: string; path: string; installedAt?: number; }[]>;
+  readConfigFile?: (serverPath: string) => Promise<{ ok: boolean; content?: string; error?: string }>;
+}
+
 declare global {
-  interface Window {
-    electronAPI: {
-      installGameServer: (appId: string) => Promise<{ ok: boolean; error?: string }>;
-      onServerLog: (cb: (line: string) => void) => void;
-      getInstalledServers: () => Promise<{ appId: string; name: string; path: string; installedAt?: number; }[]>;
-    };
-  }
+  interface Window { electronAPI: ElectronAPIShape }
 }
 
 const GameInstaller = () => {
@@ -29,11 +30,7 @@ const GameInstaller = () => {
     setInstalling(true);
     setStatus('Starting installation...');
     const result = await window.electronAPI.installGameServer(appId.trim());
-    if (result.ok) {
-      setStatus('Installation completed successfully.');
-    } else {
-      setStatus('Failed: ' + result.error);
-    }
+    if (result.ok) setStatus('Installation completed successfully.'); else setStatus('Failed: ' + result.error);
     setInstalling(false);
   };
 

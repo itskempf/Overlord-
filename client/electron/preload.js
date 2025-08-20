@@ -6,5 +6,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getInstalledServers: () => ipcRenderer.invoke('steamcmd:getInstalledServers'),
   onServerLog: (callback) => {
     ipcRenderer.on('server:log', (_event, line) => callback(line));
-  }
+  },
+  readConfigFile: (serverPath) => ipcRenderer.invoke('server:readConfig', serverPath)
 });

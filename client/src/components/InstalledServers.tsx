@@ -1,13 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
-interface InstalledServer {
+export interface InstalledServer {
   appId: string;
   name: string;
   path: string;
   installedAt?: number;
 }
 
-const InstalledServers = () => {
+interface Props { onManageServer?: (s: InstalledServer) => void }
+
+const InstalledServers = ({ onManageServer }: Props) => {
   const [servers, setServers] = useState<InstalledServer[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -18,9 +20,7 @@ const InstalledServers = () => {
     setLoading(false);
   };
 
-  useEffect(() => {
-    load();
-  }, []);
+  useEffect(() => { load(); }, []);
 
   if (loading) return <div>Loading servers...</div>;
 
@@ -35,7 +35,7 @@ const InstalledServers = () => {
             <span style={{ fontSize: 11, color: '#94a3b8' }}>AppID: {s.appId}</span>
             <span style={{ fontSize: 11, color: '#64748b' }}>{s.path}</span>
           </div>
-          <button style={{ background: '#334155', color: '#fff', border: 0, padding: '6px 12px', borderRadius: 6, cursor: 'pointer' }}>Manage</button>
+            <button onClick={() => onManageServer?.(s)} style={{ background: '#334155', color: '#fff', border: 0, padding: '6px 12px', borderRadius: 6, cursor: 'pointer' }}>Manage</button>
         </div>
       ))}
     </div>
