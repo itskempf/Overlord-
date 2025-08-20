@@ -10,5 +10,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   readConfigFile: (serverPath) => ipcRenderer.invoke('server:readConfig', serverPath),
   writeConfigFile: (serverPath, content) => ipcRenderer.invoke('server:writeConfig', serverPath, content),
   getSteamCMDPath: () => ipcRenderer.invoke('steamcmd:getPath'),
-  downloadSteamCMD: () => ipcRenderer.invoke('steamcmd:download')
+  downloadSteamCMD: () => ipcRenderer.invoke('steamcmd:download'),
+  selectServerFile: () => ipcRenderer.invoke('dialog:openFile'),
+  startServer: (filePath) => ipcRenderer.invoke('server:start', filePath),
+  stopServer: () => ipcRenderer.invoke('server:stop'),
+  onServerStatus: (callback) => ipcRenderer.on('server:status', (_e, value) => callback(value))
 });

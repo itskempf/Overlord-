@@ -3,26 +3,9 @@ import './App.css';
 import Sidebar, { type PageKey } from './components/Sidebar';
 import { type InstalledServer } from './components/InstalledServers';
 import ServersPage from './pages/ServersPage';
+import Dashboard from './components/Dashboard';
 
 interface NavigatorUADataLike { architecture?: string }
-
-const Dashboard = ({ arch }: { arch: string }) => (
-  <section className="dashboard-grid">
-    <div className="panel span-2">
-      <h2>Overview</h2>
-      <div className="stat-grid">
-        <div className="stat"><span className="label">Running</span><span className="value">0</span></div>
-        <div className="stat"><span className="label">Stopped</span><span className="value">0</span></div>
-        <div className="stat"><span className="label">Failed</span><span className="value">0</span></div>
-        <div className="stat"><span className="label">Updating</span><span className="value">0</span></div>
-      </div>
-    </div>
-    <div className="panel"><h2>Recent Activity</h2><ul className="activity-list empty"><li>No recent activity</li></ul></div>
-    <div className="panel"><h2>Planned Tasks</h2><div className="empty-state">No tasks scheduled</div></div>
-    <div className="panel"><h2>Alerts</h2><div className="empty-state">All clear</div></div>
-    <div className="panel"><h2>System</h2><ul className="kv"><li><span>Version</span><span>0.1.0</span></li><li><span>Platform</span><span>{navigator.platform}</span></li><li><span>Arch</span><span>{arch}</span></li></ul></div>
-  </section>
-);
 
 const ServerDetailPage = ({ server, onBack }: { server: InstalledServer; onBack: () => void }) => {
   const [original, setOriginal] = React.useState('');
@@ -30,10 +13,7 @@ const ServerDetailPage = ({ server, onBack }: { server: InstalledServer; onBack:
   const [saving, setSaving] = React.useState(false);
   const [savedMsg, setSavedMsg] = React.useState<string | null>(null);
 
-  React.useEffect(() => {
-    setConfig('Loading config...'); setOriginal('');
-    (async () => { const res = await window.electronAPI.readConfigFile?.(server.path); if (res?.ok) { setConfig(res.content || ''); setOriginal(res.content || ''); } else if (res) { setConfig(`Error: ${res.error}`); setOriginal(`Error: ${res.error}`); } })();
-  }, [server]);
+  React.useEffect(() => { setConfig('Loading config...'); setOriginal(''); (async () => { const res = await window.electronAPI.readConfigFile?.(server.path); if (res?.ok) { setConfig(res.content || ''); setOriginal(res.content || ''); } else if (res) { setConfig(`Error: ${res.error}`); setOriginal(`Error: ${res.error}`); } })(); }, [server]);
 
   const dirty = config !== original;
   const save = async () => { if (!dirty) return; setSaving(true); const res = await window.electronAPI.writeConfigFile?.(server.path, config); setSaving(false); if (res?.ok) { setOriginal(config); setSavedMsg('Saved!'); setTimeout(() => setSavedMsg(null), 2000); } else if (res) { setSavedMsg('Error: ' + res.error); setTimeout(() => setSavedMsg(null), 4000); } };
@@ -64,7 +44,7 @@ function App() {
 
   const showServers = () => { setSelectedServer(null); setPage('servers'); };
 
-  const content = selectedServer ? <ServerDetailPage server={selectedServer} onBack={showServers} /> : (page === 'dashboard' ? <Dashboard arch={arch} /> : <ServersPage onManage={(s) => setSelectedServer(s)} />);
+  const content = selectedServer ? <ServerDetailPage server={selectedServer} onBack={showServers} /> : (page === 'dashboard' ? <Dashboard /> : <ServersPage onManage={(s) => setSelectedServer(s)} />);
   const title = selectedServer ? selectedServer.name : (page === 'dashboard' ? 'Dashboard' : 'Servers');
 
   return (

@@ -9,6 +9,10 @@ declare global {
     writeConfigFile?(serverPath: string, content: string): Promise<{ ok: boolean; error?: string }>;
     getSteamCMDPath(): Promise<string | null>;
     downloadSteamCMD(): Promise<{ ok: boolean; path?: string; error?: string }>;
+    selectServerFile(): Promise<string | null>;
+    startServer(filePath: string): Promise<{ ok: boolean; error?: string }>;
+    stopServer(): Promise<{ ok: boolean; error?: string }>;
+    onServerStatus(cb: (status: string) => void): void;
   }
   interface Window { electronAPI: ElectronAPI }
 }
