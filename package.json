@@ -23,5 +23,8 @@
   },
   "engines": {
     "node": ">=18"
+  },
+  "dependencies": {
+    "ini": "^5.0.0"
   }
 }

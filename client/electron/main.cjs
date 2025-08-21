@@ -4,6 +4,7 @@ const path = require('path');
 const Store = require('electron-store');
 const { spawn } = require('child_process');
 const fs = require('fs');
+const ini = require('ini');
 
 // Initialize the store to save app data
 const store = new Store();
@@ -122,18 +123,20 @@ ipcMain.handle('server:readConfig', (event, serverPath) => {
     const configPath = path.join(serverPath, 'server.cfg');
     try {
         if (fs.existsSync(configPath)) {
-            return fs.readFileSync(configPath, 'utf-8');
+            const fileContent = fs.readFileSync(configPath, 'utf-8');
+            return ini.parse(fileContent);
         }
-        return 'Error: server.cfg not found in the server directory.';
+        return { error: 'server.cfg not found in the server directory.' };
     } catch (error) {
-        return `Error reading config file: ${error.message}`;
+        return { error: `Error reading config file: ${error.message}` };
     }
 });
 
 ipcMain.handle('server:writeConfig', (event, serverPath, content) => {
     const configPath = path.join(serverPath, 'server.cfg');
      try {
-        fs.writeFileSync(configPath, content, 'utf-8');
+        const configString = ini.stringify(content);
+        fs.writeFileSync(configPath, configString, 'utf-8');
         return { success: true, message: 'Config saved successfully.' };
     } catch (error) {
         return { success: false, message: `Error saving config file: ${error.message}` };

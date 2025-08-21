@@ -7,31 +7,38 @@ interface ServerDetailPageProps {
 }
 
 const ServerDetailPage: React.FC<ServerDetailPageProps> = ({ server, onBack }) => {
-  const [configContent, setConfigContent] = useState<string>('');
-  const [originalConfigContent, setOriginalConfigContent] = useState<string>('');
+  const [config, setConfig] = useState<Record<string, string>>({});
+  const [originalConfig, setOriginalConfig] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchConfig = async () => {
       const content = await window.electronAPI.readConfigFile(server.path);
-      setConfigContent(content);
-      setOriginalConfigContent(content);
+      if (content.error) {
+        setSaveMessage(`Error loading config: ${content.error}`);
+        return;
+      }
+      setConfig(content);
+      setOriginalConfig(content);
     };
     fetchConfig();
   }, [server.path]);
 
-  const handleConfigChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setConfigContent(event.target.value);
+  const handleInputChange = (key: string, value: string) => {
+    setConfig((prevConfig) => ({
+      ...prevConfig,
+      [key]: value,
+    }));
   };
 
   const handleSaveChanges = async () => {
     setIsSaving(true);
     setSaveMessage(null);
     try {
-      const result = await window.electronAPI.writeConfigFile(server.path, configContent);
+      const result = await window.electronAPI.writeConfigFile(server.path, config);
       if (result.success) {
-        setOriginalConfigContent(configContent);
+        setOriginalConfig(config);
         setSaveMessage('Saved!');
       } else {
         setSaveMessage(`Error: ${result.message}`);
@@ -44,7 +51,7 @@ const ServerDetailPage: React.FC<ServerDetailPageProps> = ({ server, onBack }) =
     }
   };
 
-  const hasChanges = configContent !== originalConfigContent;
+  const hasChanges = JSON.stringify(config) !== JSON.stringify(originalConfig);
 
   return (
     <div className="p-4 bg-gray-800 rounded-lg shadow-md text-white">
@@ -71,11 +78,20 @@ const ServerDetailPage: React.FC<ServerDetailPageProps> = ({ server, onBack }) =
           {saveMessage}
         </p>
       )}
-      <textarea
-        className="w-full h-96 p-3 rounded-md bg-gray-900 text-white font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        value={configContent}
-        onChange={handleConfigChange}
-      />
+      <div className="space-y-4">
+        {Object.keys(config).map((key) => (
+          <div key={key} className="flex items-center">
+            <label htmlFor={key} className="w-1/4 text-gray-300 font-medium pr-4">{key}:</label>
+            <input
+              type="text"
+              id={key}
+              value={config[key]}
+              onChange={(e) => handleInputChange(key, e.target.value)}
+              className="w-3/4 p-2 rounded-md bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
