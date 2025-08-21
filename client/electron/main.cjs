@@ -146,6 +146,10 @@ ipcMain.handle('steamcmd:getPath', () => {
     return store.get('steamcmdPath');
 });
 
+ipcMain.handle('steamcmd:getInstalledServers', () => {
+    return store.get('installedServers', []);
+});
+
 ipcMain.handle('steamcmd:installGame', async (event, appId) => {
     const steamcmdPath = store.get('steamcmdPath');
     if (!steamcmdPath) {
@@ -178,6 +182,20 @@ ipcMain.handle('steamcmd:installGame', async (event, appId) => {
                 if (code === 0) {
                     mainWindow.webContents.send('server:log', `SteamCMD process for App ID ${appId} completed successfully.`);
                     mainWindow.webContents.send('server:status', 'Idle');
+
+                    // Save server information to store
+                    const installedServers = store.get('installedServers', []);
+                    const serverPath = path.join(path.dirname(steamcmdPath), 'steamapps', 'common', appId); // Simplified path
+                    const serverName = `App ID: ${appId}`; // Placeholder name
+
+                    const existingServerIndex = installedServers.findIndex(s => s.appId === appId);
+                    if (existingServerIndex > -1) {
+                        installedServers[existingServerIndex] = { appId, name: serverName, path: serverPath };
+                    } else {
+                        installedServers.push({ appId, name: serverName, path: serverPath });
+                    }
+                    store.set('installedServers', installedServers);
+
                     resolve({ success: true, message: 'Installation complete.' });
                 } else {
                     mainWindow.webContents.send('server:log', `SteamCMD process for App ID ${appId} exited with code ${code}.`);

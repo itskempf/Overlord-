@@ -1,60 +1,64 @@
 import React, { useState } from 'react';
 
 const GameInstaller: React.FC = () => {
-  // 1. STATE:
-  const [appId, setAppId] = useState('');
-  const [status, setStatus] = useState('');
-  const [isInstalling, setIsInstalling] = useState(false);
+  const [appId, setAppId] = useState<string>('');
+  const [isInstalling, setIsInstalling] = useState<boolean>(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [isError, setIsError] = useState<boolean>(false);
 
-  // 2. INSTALL FUNCTION:
   const handleInstall = async () => {
     if (!appId) {
-      setStatus('Please enter a Steam App ID.');
+      setMessage('Please enter a Steam App ID.');
+      setIsError(true);
       return;
     }
 
     setIsInstalling(true);
-    setStatus(''); // Clear previous status messages
+    setMessage('Installation in progress...');
+    setIsError(false);
+
     try {
       const result = await window.electronAPI.installGameServer(appId);
       if (result.success) {
-        setStatus('Installation complete!');
+        setMessage(result.message);
+        setIsError(false);
       } else {
-        setStatus(`Installation failed: ${result.message}`);
+        setMessage(result.message);
+        setIsError(true);
       }
     } catch (error: any) {
-      setStatus(`Error during installation: ${error.message}`);
+      setMessage(`Error: ${error.message}`);
+      setIsError(true);
     } finally {
       setIsInstalling(false);
     }
   };
 
-  // 3. RENDER LOGIC:
   return (
     <div className="p-4 bg-gray-800 rounded-lg shadow-md">
-      <h2 className="text-xl font-bold text-white mb-4">Install / Update Game Server</h2>
+      <h2 className="text-xl font-semibold text-white mb-4">Game Server Installation</h2>
       <div className="flex flex-col space-y-4">
         <input
           type="text"
-          placeholder="Enter Steam App ID"
-          className="p-2 rounded bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Enter Steam App ID (e.g., 4020 for Garry's Mod Dedicated Server)"
           value={appId}
           onChange={(e) => setAppId(e.target.value)}
+          className="p-2 rounded-md bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
           disabled={isInstalling}
         />
         <button
           onClick={handleInstall}
-          className={`py-2 px-4 rounded text-white font-semibold ${
-            isInstalling || !appId
-              ? 'bg-gray-600 cursor-not-allowed'
-              : 'bg-blue-600 hover:bg-blue-700'
-          } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-          disabled={isInstalling || !appId}
+          disabled={isInstalling}
+          className={`px-4 py-2 rounded-md ${isInstalling ? 'bg-gray-600 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'} text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50`}
         >
-          {isInstalling ? 'Installing...' : 'Install / Update'}
+          {isInstalling ? 'Installing...' : 'Install/Update Server'}
         </button>
       </div>
-      {status && <p className="mt-4 text-sm text-white">{status}</p>}
+      {message && (
+        <p className={`mt-4 text-sm ${isError ? 'text-red-400' : 'text-green-400'}`}>
+          {message}
+        </p>
+      )}
     </div>
   );
 };
