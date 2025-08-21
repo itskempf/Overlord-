@@ -1,16 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { type InstalledServer } from '../../shared/src/types';
 
 interface ScheduledTask {
   id: string;
   serverName: string;
   type: 'backup' | 'restart';
   schedule: string;
-}
-
-interface InstalledServer {
-  name: string;
-  path: string;
-  appId?: string;
 }
 
 const TaskManager: React.FC = () => {
@@ -27,7 +22,7 @@ const TaskManager: React.FC = () => {
   };
 
   const fetchServers = async () => {
-    const fetchedServers = await window.electronAPI.listInstalledServers();
+    const fetchedServers = await window.electronAPI.getInstalledServers();
     setServers(fetchedServers);
     if (fetchedServers.length > 0) {
       setSelectedServer(fetchedServers[0].name);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { InstalledServer } from 'shared';
+import { type InstalledServer } from '../../shared/src/types';
 
 
 

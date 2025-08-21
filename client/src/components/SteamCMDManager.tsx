@@ -11,7 +11,7 @@ const SteamCMDManager = () => {
     let mounted = true;
     (async () => {
       try {
-        const found = await window.electronAPI.steamcmdGetPath();
+        const found = await window.electronAPI.getSteamCMDPath();
         if (!mounted) return;
         if (found) { setIsInstalled(true); setStatus('SteamCMD is ready'); }
         else { setIsInstalled(false); setStatus('SteamCMD not found. Please set it in settings.'); }

@@ -12,8 +12,9 @@ declare global {
     // SteamCMD Functions
     getSteamCMDPath: () => Promise<string | undefined>;
     setSteamCMDPath: (path: string) => Promise<{ success: boolean }>;
-    getInstalledServers: () => Promise<any[]>;
+    getInstalledServers: () => Promise<any[]>; // Assuming any[] for now, will be more specific later if needed
     steamcmdInstallGame: (appId: string) => Promise<{ success: boolean; message: string }>;
+    downloadSteamCMD: () => Promise<{ success: boolean; message: string }>; // Added this based on preload.js
 
     // App Data Management Functions
     openAppDataFolder: () => void;
@@ -28,9 +29,9 @@ declare global {
     readConfigFile: (serverPath: string) => Promise<Record<string, string> | { error: string }>;
     writeConfigFile: (serverPath: string, content: Record<string, string>) => Promise<{ success: boolean; message: string }>;
 
-    // Task Management Functions (NEW)
-    listTasks: () => Promise<any[]>; // Assuming 'any[]' for now, can define a more specific type later
-    createTask: (task: any) => Promise<{ success: boolean; message: string }>; // Assuming 'any' for now
+    // Task Management Functions
+    listTasks: () => Promise<any[]>;
+    createTask: (task: any) => Promise<{ success: boolean; message: string }>;
     deleteTask: (taskId: string) => Promise<{ success: boolean; message: string }>;
   }
   interface Window { electronAPI: ElectronAPI }
