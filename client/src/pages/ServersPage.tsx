@@ -1,21 +1,21 @@
-import SteamCMDManager from '../components/SteamCMDManager';
+import React from 'react';
 import GameInstaller from '../components/GameInstaller';
-import InstalledServers, { type InstalledServer } from '../components/InstalledServers';
+import InstalledServers from '../components/InstalledServers';
+import { InstalledServer } from '../components/InstalledServers';
 
-interface Props { onManage: (s: InstalledServer) => void }
+interface ServersPageProps {
+  onManage: (server: InstalledServer) => void;
+}
 
-const ServersPage = ({ onManage }: Props) => {
+const ServersPage: React.FC<ServersPageProps> = ({ onManage }) => {
   return (
-    <section style={{ padding: '0 32px 32px', display: 'flex', flexDirection: 'column', gap: 24 }}>
-      <div className="panel" style={{ width: '100%', display:'flex', flexDirection:'column', gap:16 }}>
-        <h2 style={{ margin:0 }}>Install / Update Game Server</h2>
-        <SteamCMDManager />
-        <GameInstaller />
+    <div className="p-4">
+      <h1 className="text-2xl font-bold text-white mb-6">Manage Game Servers</h1>
+      <GameInstaller />
+      <div className="mt-6">
+        <InstalledServers onManage={onManage} />
       </div>
-      <div className="panel" style={{ width: '100%' }}>
-        <InstalledServers onManageServer={onManage} />
-      </div>
-    </section>
+    </div>
   );
 };
 

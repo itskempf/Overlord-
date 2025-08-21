@@ -1,43 +1,51 @@
-import { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
-export interface InstalledServer {
+interface InstalledServer {
   appId: string;
   name: string;
   path: string;
-  installedAt?: number;
+  installedAt: number;
 }
 
-interface Props { onManageServer?: (s: InstalledServer) => void }
+interface InstalledServersProps {
+  onManage: (server: InstalledServer) => void;
+}
 
-const InstalledServers = ({ onManageServer }: Props) => {
+const InstalledServers: React.FC<InstalledServersProps> = ({ onManage }) => {
   const [servers, setServers] = useState<InstalledServer[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  const load = async () => {
-    setLoading(true);
-    const list = await window.electronAPI.getInstalledServers();
-    setServers(list || []);
-    setLoading(false);
-  };
-
-  useEffect(() => { load(); }, []);
-
-  if (loading) return <div>Loading servers...</div>;
+  useEffect(() => {
+    const fetchServers = async () => {
+      const installed = await window.electronAPI.getInstalledServers();
+      setServers(installed);
+    };
+    fetchServers();
+  }, []);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <h3>Installed Servers</h3>
-      {servers.length === 0 && <div style={{ fontSize: 13, color: '#64748b' }}>No servers installed yet.</div>}
-      {servers.map(s => (
-        <div key={s.appId} style={{ padding: 12, background: '#182029', border: '1px solid #222b35', borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <strong>{s.name}</strong>
-            <span style={{ fontSize: 11, color: '#94a3b8' }}>AppID: {s.appId}</span>
-            <span style={{ fontSize: 11, color: '#64748b' }}>{s.path}</span>
-          </div>
-            <button onClick={() => onManageServer?.(s)} style={{ background: '#334155', color: '#fff', border: 0, padding: '6px 12px', borderRadius: 6, cursor: 'pointer' }}>Manage</button>
-        </div>
-      ))}
+    <div className="p-4 bg-gray-800 rounded-lg shadow-md text-white">
+      <h2 className="text-xl font-semibold mb-4">Installed Servers</h2>
+      {servers.length === 0 ? (
+        <p className="text-gray-400">No servers installed yet.</p>
+      ) : (
+        <ul className="space-y-3">
+          {servers.map((server) => (
+            <li key={server.appId} className="flex justify-between items-center bg-gray-700 p-3 rounded-md">
+              <div>
+                <p className="font-medium">{server.name} (App ID: {server.appId})</p>
+                <p className="text-sm text-gray-400">Path: {server.path}</p>
+              </div>
+              <button
+                onClick={() => onManage(server)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition duration-200 ease-in-out"
+              >
+                Manage
+              </button>
+            </li>
+          ))
+          }
+        </ul>
+      )}
     </div>
   );
 };

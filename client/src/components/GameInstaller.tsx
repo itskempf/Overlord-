@@ -1,38 +1,63 @@
-// A React functional component for installing game servers.
-// Uses minimal inline styles (no Tailwind currently configured).
-import { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
-declare global { interface Window { electronAPI: ElectronAPI } }
+const GameInstaller: React.FC = () => {
+  const [appId, setAppId] = useState<string>('');
+  const [isInstalling, setIsInstalling] = useState<boolean>(false);
+  const [statusMessage, setStatusMessage] = useState<string>('');
 
-const GameInstaller = () => {
-  const [appId, setAppId] = useState('');
-  const [installing, setInstalling] = useState(false);
-  const [status, setStatus] = useState<string | null>(null);
-  const [logs, setLogs] = useState<string[]>([]);
+  const handleInstallClick = async () => {
+    if (!appId) {
+      setStatusMessage('Please enter a Steam App ID.');
+      return;
+    }
 
-  useEffect(() => { window.electronAPI.onServerLog(line => { setLogs(prev => [...prev.slice(-400), line]); }); }, []);
+    setIsInstalling(true);
+    setStatusMessage('Installation in progress...');
 
-  const handleInstall = async () => {
-    if (!appId) return;
-    setInstalling(true);
-    setStatus('Starting installation...');
-    const result = await window.electronAPI.installGameServer(appId.trim());
-    setStatus(result.ok ? 'Installation completed successfully.' : 'Failed: ' + result.error);
-    setInstalling(false);
+    try {
+      const result = await window.electronAPI.installGameServer(appId);
+      if (result.ok) {
+        setStatusMessage('Server installed/updated successfully!');
+      } else {
+        setStatusMessage(`Error: ${result.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      setStatusMessage(`An unexpected error occurred: ${error.message}`);
+      console.error('Error installing game server:', error);
+    } finally {
+      setIsInstalling(false);
+    }
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <h2>Install / Update Game Server</h2>
-      <div style={{ display: 'flex', gap: 8 }}>
-        <input placeholder="Steam App ID" value={appId} onChange={e => setAppId(e.target.value)} style={{ flex: 1, padding: '8px 10px', borderRadius: 6, border: '1px solid #334155', background: '#1e2932', color: '#e2e8f0' }} />
-        <button disabled={installing || !appId} onClick={handleInstall} style={{ padding: '8px 14px', borderRadius: 6, border: 0, background: installing ? '#475569' : '#2563eb', color: '#fff', cursor: installing ? 'not-allowed' : 'pointer', fontWeight: 600 }}>{installing ? 'Installing...' : 'Install / Update'}</button>
+    <div className="p-4 bg-gray-800 rounded-lg shadow-md text-white">
+      <h2 className="text-xl font-semibold mb-4">Game Server Installer</h2>
+      <div className="flex items-center space-x-4 mb-4">
+        <input
+          type="text"
+          placeholder="Enter Steam App ID (e.g., 4020)"
+          value={appId}
+          onChange={(e) => setAppId(e.target.value)}
+          className="flex-grow p-2 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:border-blue-500"
+          disabled={isInstalling}
+        />
+        <button
+          onClick={handleInstallClick}
+          disabled={isInstalling}
+          className={`px-6 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-opacity-50 transition duration-200 ease-in-out
+            ${isInstalling
+              ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+              : 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500'
+            }`}
+        >
+          {isInstalling ? 'Installing...' : 'Install/Update Server'}
+        </button>
       </div>
-      {status && <div style={{ fontSize: 13, color: '#94a3b8' }}>{status}</div>}
-      <div style={{ background: '#11171d', border: '1px solid #1f2a33', borderRadius: 8, padding: 12, maxHeight: 260, overflow: 'auto', fontFamily: 'ui-monospace, monospace', fontSize: 12 }}>
-        {logs.length === 0 && <div style={{ color: '#475569' }}>No output yet.</div>}
-        {logs.map((l, i) => <div key={i}>{l}</div>)}
-      </div>
+      {statusMessage && (
+        <p className={`text-sm ${statusMessage.startsWith('Error') ? 'text-red-400' : 'text-green-400'}`}>
+          {statusMessage}
+        </p>
+      )}
     </div>
   );
 };
