@@ -1,4 +1,25 @@
-# Dependency directories
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# TypeScript
+*.tsbuildinfo
+
+# Build outputs
+dist/
+client/dist/
+server/dist/
+shared/dist/
+
+# Electron build artifacts
+client/release/
+
+# OS
+.DS_Store
+Thumbs.db# Dependency directories
 node_modules/
 /dist/
 /out/

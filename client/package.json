@@ -1,10 +1,12 @@
 {
   "name": "client",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "homepage": "./",
   "main": "electron/main.cjs",
+  "description": "Overlord desktop client (Electron + React)",
+  "author": "itskempf",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -14,6 +16,11 @@
     "electron:build": "npm run build && electron-builder"
   },
   "dependencies": {
+  "archiver": "^7.0.1",
+  "extract-zip": "^2.0.1",
+  "ini": "^5.0.0",
+  "node-cron": "^4.2.1",
+    "shared": "file:../shared",
     "electron-store": "^7.0.3",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
@@ -40,10 +47,12 @@
   "build": {
     "productName": "Overlord",
     "appId": "com.overlord.app",
+  "electronVersion": "37.3.0",
     "files": [
       "dist/**/*",
       "electron/**/*"
     ],
+  "artifactName": "Overlord-Setup-${version}.exe",
     "win": {
       "target": "nsis"
     },
