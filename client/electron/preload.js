@@ -14,5 +14,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   selectServerFile: () => ipcRenderer.invoke('dialog:openFile'),
   startServer: (filePath) => ipcRenderer.invoke('server:start', filePath),
   stopServer: () => ipcRenderer.invoke('server:stop'),
-  onServerStatus: (callback) => ipcRenderer.on('server:status', (_e, value) => callback(value))
+  onServerStatus: (callback) => ipcRenderer.on('server:status', (_e, value) => callback(value)),
+  createBackup: (server) => ipcRenderer.invoke('server:createBackup', server),
+  listBackups: (serverName) => ipcRenderer.invoke('server:listBackups', serverName),
+  restoreBackup: (server, backupFileName) => ipcRenderer.invoke('server:restoreBackup', server, backupFileName)
+});
 });

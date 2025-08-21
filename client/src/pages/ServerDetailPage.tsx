@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { InstalledServer } from '../components/InstalledServers';
+import BackupManager from '../components/BackupManager';
 
 interface ServerDetailPageProps {
   server: InstalledServer;
@@ -91,6 +92,9 @@ const ServerDetailPage: React.FC<ServerDetailPageProps> = ({ server, onBack }) =
             />
           </div>
         ))}
+      </div>
+      <div className="mt-8">
+        <BackupManager server={server} />
       </div>
     </div>
   );

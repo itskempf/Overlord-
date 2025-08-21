@@ -1,10 +1,11 @@
-// This is the main process for our Electron app.
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const Store = require('electron-store');
 const { spawn } = require('child_process');
 const fs = require('fs');
 const ini = require('ini');
+const archiver = require('archiver');
+const extract = require('extract-zip');
 
 // Initialize the store to save app data
 const store = new Store();
@@ -128,7 +129,7 @@ ipcMain.handle('server:readConfig', (event, serverPath) => {
         }
         return { error: 'server.cfg not found in the server directory.' };
     } catch (error) {
-        return { error: `Error reading config file: ${error.message}` };
+        return { error: `Error reading config file: ${error.message}`;
     }
 });
 
@@ -221,3 +222,95 @@ ipcMain.handle('steamcmd:installGame', async (event, appId) => {
 });
 
 // NOTE: Add your steamcmd:download handler logic here if needed.
+
+ipcMain.handle('server:createBackup', async (event, server) => {
+    try {
+        const backupsDir = path.join(app.getPath('userData'), 'backups', server.name);
+        if (!fs.existsSync(backupsDir)) {
+            fs.mkdirSync(backupsDir, { recursive: true });
+        }
+
+        const backupFileName = `backup-${Date.now()}.zip`;
+        const outputPath = path.join(backupsDir, backupFileName);
+        const output = fs.createWriteStream(outputPath);
+        const archive = archiver('zip', {
+            zlib: { level: 9 } // Sets the compression level.
+        });
+
+        output.on('close', function() {
+            mainWindow.webContents.send('server:log', `Backup created: ${backupFileName} (${archive.pointer()} total bytes)`);
+        });
+
+        archive.on('warning', function(err) {
+            if (err.code === 'ENOENT') {
+                mainWindow.webContents.send('server:log', `Backup warning: ${err.message}`);
+            } else {
+                throw err;
+            }
+        });
+
+        archive.on('error', function(err) {
+            throw err;
+        });
+
+        archive.pipe(output);
+        archive.directory(server.path, false); // Append the server directory from its root
+        await archive.finalize();
+
+        return { success: true, message: 'Backup created successfully.' };
+    } catch (error) {
+        mainWindow.webContents.send('server:log', `Error creating backup: ${error.message}`);
+        return { success: false, message: `Error creating backup: ${error.message}` };
+    }
+});
+
+ipcMain.handle('server:listBackups', async (event, serverName) => {
+    try {
+        const backupsDir = path.join(app.getPath('userData'), 'backups', serverName);
+        if (!fs.existsSync(backupsDir)) {
+            return [];
+        }
+        const files = await fs.promises.readdir(backupsDir);
+        return files.filter(file => file.endsWith('.zip')).sort((a, b) => {
+            const aTime = parseInt(a.split('-')[1].split('.')[0]);
+            const bTime = parseInt(b.split('-')[1].split('.')[0]);
+            return bTime - aTime; // Sort by newest first
+        });
+    } catch (error) {
+        mainWindow.webContents.send('server:log', `Error listing backups: ${error.message}`);
+        return [];
+    }
+});
+
+ipcMain.handle('server:restoreBackup', async (event, server, backupFileName) => {
+    try {
+        // 1. Stop the server if it's running
+        if (serverProcess) {
+            serverProcess.kill();
+            serverProcess = null;
+            mainWindow.webContents.send('server:status', 'Stopping for restore...');
+            mainWindow.webContents.send('server:log', 'Server stopped for restore operation.');
+        }
+
+        // 2. Delete the contents of the server's main directory
+        if (fs.existsSync(server.path)) {
+            await fs.promises.rm(server.path, { recursive: true, force: true });
+            mainWindow.webContents.send('server:log', `Deleted existing server directory: ${server.path}`);
+        }
+        fs.mkdirSync(server.path, { recursive: true }); // Recreate empty directory
+
+        // 3. Unzip the selected backup file into the now-empty server directory
+        const backupsDir = path.join(app.getPath('userData'), 'backups', server.name);
+        const backupPath = path.join(backupsDir, backupFileName);
+
+        await extract(backupPath, { dir: server.path });
+        mainWindow.webContents.send('server:log', `Restored ${backupFileName} to ${server.path}`);
+
+        mainWindow.webContents.send('server:status', 'Idle');
+        return { success: true, message: 'Backup restored successfully.' };
+    } catch (error) {
+        mainWindow.webContents.send('server:log', `Error restoring backup: ${error.message}`);
+        mainWindow.webContents.send('server:status', 'Error');
+        return { success: false, message: `Error restoring backup: ${error.message}` };
+    }
+});
