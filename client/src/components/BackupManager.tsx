@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { type InstalledServer } from '../../shared/src/types';
+import type { InstalledServer } from 'shared';
 import toast from 'react-hot-toast';
 
 interface BackupManagerProps {
@@ -24,14 +24,7 @@ const BackupManager: React.FC<BackupManagerProps> = ({ server }) => {
     const promise = window.electronAPI.createBackup(server);
     toast.promise(promise, {
       loading: 'Creating backup...',
-      success: (result) => {
-        if (result.success) {
-          fetchBackups(); // Refresh list
-          return 'Backup created successfully!';
-        } else {
-          throw new Error(`Error creating backup: ${result.message}`);
-        }
-      },
+      success: 'Backup created successfully!',
       error: (err) => `Error creating backup: ${err.message}`,
     });
     await promise; // Wait for the promise to resolve/reject before setting status back to Idle
@@ -53,14 +46,8 @@ const BackupManager: React.FC<BackupManagerProps> = ({ server }) => {
       }
     }), {
       loading: 'Restoring backup...',
-      success: (msg) => {
-        setStatus('Idle');
-        return msg;
-      },
-      error: (err) => {
-        setStatus('Idle');
-        return err.message;
-      },
+      success: 'Backup restored successfully!',
+      error: (err) => err.message,
     });
   };
 

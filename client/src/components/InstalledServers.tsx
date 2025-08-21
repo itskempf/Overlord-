@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { type InstalledServer } from '../../shared/src/types';
+import type { InstalledServer } from 'shared';
 
 
 
@@ -12,7 +12,7 @@ const InstalledServers: React.FC<InstalledServersProps> = ({ onManage }) => {
 
   useEffect(() => {
     const fetchServers = async () => {
-      const installed = await window.electronAPI.listInstalledServers();
+  const installed = await window.electronAPI.getInstalledServers();
       setServers(installed);
     };
     fetchServers();

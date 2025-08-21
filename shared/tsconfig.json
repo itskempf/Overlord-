@@ -4,6 +4,7 @@
     "module": "commonjs",
     "declaration": true,
     "outDir": "./dist",
+  "composite": true,
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,

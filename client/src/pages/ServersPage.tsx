@@ -1,7 +1,7 @@
 import React from 'react';
 import GameInstaller from '../components/GameInstaller';
 import InstalledServers from '../components/InstalledServers';
-import { type InstalledServer } from '../../shared/src/types';
+import type { InstalledServer } from 'shared';
 
 interface ServersPageProps {
   onManage: (server: InstalledServer) => void;

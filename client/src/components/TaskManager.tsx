@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { type InstalledServer } from '../../shared/src/types';
+import type { InstalledServer } from 'shared';
 
 interface ScheduledTask {
   id: string;

@@ -1,4 +1,4 @@
-import { InstalledServer } from '../../shared/src/types';
+import type { InstalledServer } from 'shared';
 
 declare global {
   interface ElectronAPI {
@@ -10,9 +10,9 @@ declare global {
     onServerLog: (callback: (log: string) => void) => void;
 
     // SteamCMD Functions
-    getSteamCMDPath: () => Promise<string | undefined>;
-    setSteamCMDPath: (path: string) => Promise<{ success: boolean }>;
-    getInstalledServers: () => Promise<any[]>; // Assuming any[] for now, will be more specific later if needed
+  getSteamCMDPath: () => Promise<string | undefined>;
+  setSteamCMDPath: (path: string) => Promise<{ success: boolean }>;
+  getInstalledServers: () => Promise<any[]>; // Assuming any[] for now, will be more specific later if needed
     steamcmdInstallGame: (appId: string) => Promise<{ success: boolean; message: string }>;
     downloadSteamCMD: () => Promise<{ success: boolean; message: string }>; // Added this based on preload.js
 

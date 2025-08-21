@@ -1,7 +1,7 @@
 import * as React from 'react';
 import './App.css';
 import Sidebar, { type PageKey } from './components/Sidebar';
-import { type InstalledServer } from '../../shared/src/types';
+import type { InstalledServer } from 'shared';
 import ServersPage from './pages/ServersPage';
 import Dashboard from './components/Dashboard';
 import SettingsPage from './pages/SettingsPage';
