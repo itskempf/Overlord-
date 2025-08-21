@@ -146,4 +146,57 @@ ipcMain.handle('steamcmd:getPath', () => {
     return store.get('steamcmdPath');
 });
 
+ipcMain.handle('steamcmd:installGame', async (event, appId) => {
+    const steamcmdPath = store.get('steamcmdPath');
+    if (!steamcmdPath) {
+        mainWindow.webContents.send('server:log', 'ERROR: SteamCMD path not configured. Please set it in settings.');
+        return { success: false, message: 'SteamCMD path not configured.' };
+    }
+
+    // Ensure steamcmd.exe exists
+    if (!fs.existsSync(steamcmdPath)) {
+        mainWindow.webContents.send('server:log', `ERROR: steamcmd.exe not found at ${steamcmdPath}.`);
+        return { success: false, message: `steamcmd.exe not found at ${steamcmdPath}.` };
+    }
+
+    mainWindow.webContents.send('server:log', `Starting SteamCMD for App ID: ${appId}`);
+    mainWindow.webContents.send('server:status', 'Installing');
+
+    try {
+        const steamcmdProcess = spawn(steamcmdPath, ['+login', 'anonymous', '+app_update', appId, 'validate', '+quit']);
+
+        steamcmdProcess.stdout.on('data', (data) => {
+            mainWindow.webContents.send('server:log', data.toString());
+        });
+
+        steamcmdProcess.stderr.on('data', (data) => {
+            mainWindow.webContents.send('server:log', `ERROR: ${data.toString()}`);
+        });
+
+        return new Promise((resolve) => {
+            steamcmdProcess.on('close', (code) => {
+                if (code === 0) {
+                    mainWindow.webContents.send('server:log', `SteamCMD process for App ID ${appId} completed successfully.`);
+                    mainWindow.webContents.send('server:status', 'Idle');
+                    resolve({ success: true, message: 'Installation complete.' });
+                } else {
+                    mainWindow.webContents.send('server:log', `SteamCMD process for App ID ${appId} exited with code ${code}.`);
+                    mainWindow.webContents.send('server:status', 'Error');
+                    resolve({ success: false, message: `SteamCMD process exited with code ${code}.` });
+                }
+            });
+
+            steamcmdProcess.on('error', (err) => {
+                mainWindow.webContents.send('server:log', `Failed to start SteamCMD process: ${err.message}`);
+                mainWindow.webContents.send('server:status', 'Error');
+                resolve({ success: false, message: `Failed to start SteamCMD: ${err.message}` });
+            });
+        });
+    } catch (error) {
+        mainWindow.webContents.send('server:log', `Error during SteamCMD installation: ${error.message}`);
+        mainWindow.webContents.send('server:status', 'Error');
+        return { success: false, message: `Error during SteamCMD installation: ${error.message}` };
+    }
+});
+
 // NOTE: Add your steamcmd:download handler logic here if needed.
