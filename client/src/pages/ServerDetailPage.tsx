@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { InstalledServer } from '../components/InstalledServers';
+import { InstalledServer } from 'shared';
 import BackupManager from '../components/BackupManager';
 
 interface ServerDetailPageProps {
@@ -15,13 +15,13 @@ const ServerDetailPage: React.FC<ServerDetailPageProps> = ({ server, onBack }) =
 
   useEffect(() => {
     const fetchConfig = async () => {
-      const content = await window.electronAPI.readConfigFile(server.path);
-      if (content.error) {
-        setSaveMessage(`Error loading config: ${content.error}`);
+      const result = await window.electronAPI.readConfigFile(server.path);
+      if ('error' in result) {
+        setSaveMessage(`Error loading config: ${result.error}`);
         return;
       }
-      setConfig(content);
-      setOriginalConfig(content);
+      setConfig(result);
+      setOriginalConfig(result);
     };
     fetchConfig();
   }, [server.path]);

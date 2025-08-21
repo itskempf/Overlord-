@@ -9,7 +9,7 @@ const Dashboard = () => {
     <section style={{ padding: '0 32px 32px', display: 'flex', flexDirection: 'column', gap: 24 }}>
       <div className="panel" style={{ display:'flex', flexDirection:'column', gap:16 }}>
         <h2 style={{ margin:0 }}>Server Target</h2>
-        <ServerSelector onSelected={setSelectedPath} />
+        <ServerSelector selectedPath={selectedPath} onSelected={setSelectedPath} />
         <ServerControls selectedPath={selectedPath} />
       </div>
       <div className="panel" style={{ display:'flex', flexDirection:'column', gap:16 }}>

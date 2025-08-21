@@ -3,3 +3,5 @@ export interface Player {
   username: string;
   level: number;
 }
+
+export * from './types';

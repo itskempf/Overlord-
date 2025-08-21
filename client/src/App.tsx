@@ -1,11 +1,9 @@
 import * as React from 'react';
 import './App.css';
 import Sidebar, { type PageKey } from './components/Sidebar';
-import { type InstalledServer } from './components/InstalledServers';
+import { type InstalledServer } from 'shared';
 import ServersPage from './pages/ServersPage';
 import Dashboard from './components/Dashboard';
-
-interface NavigatorUADataLike { architecture?: string }
 
 const ServerDetailPage = ({ server, onBack }: { server: InstalledServer; onBack: () => void }) => {
   const [original, setOriginal] = React.useState('');
@@ -13,10 +11,10 @@ const ServerDetailPage = ({ server, onBack }: { server: InstalledServer; onBack:
   const [saving, setSaving] = React.useState(false);
   const [savedMsg, setSavedMsg] = React.useState<string | null>(null);
 
-  React.useEffect(() => { setConfig('Loading config...'); setOriginal(''); (async () => { const res = await window.electronAPI.readConfigFile?.(server.path); if (res?.ok) { setConfig(res.content || ''); setOriginal(res.content || ''); } else if (res) { setConfig(`Error: ${res.error}`); setOriginal(`Error: ${res.error}`); } })(); }, [server]);
+  React.useEffect(() => { setConfig('Loading config...'); setOriginal(''); (async () => { const res = await window.electronAPI.readConfigFile?.(server.path); if (res && 'error' in res) { setConfig(`Error: ${res.error}`); setOriginal(`Error: ${res.error}`); } else if (res) { setConfig(JSON.stringify(res, null, 2)); setOriginal(JSON.stringify(res, null, 2)); } })(); }, [server]);
 
   const dirty = config !== original;
-  const save = async () => { if (!dirty) return; setSaving(true); const res = await window.electronAPI.writeConfigFile?.(server.path, config); setSaving(false); if (res?.ok) { setOriginal(config); setSavedMsg('Saved!'); setTimeout(() => setSavedMsg(null), 2000); } else if (res) { setSavedMsg('Error: ' + res.error); setTimeout(() => setSavedMsg(null), 4000); } };
+  const save = async () => { if (!dirty) return; setSaving(true); try { const parsedConfig = JSON.parse(config); const res = await window.electronAPI.writeConfigFile?.(server.path, parsedConfig); setSaving(false); if (res?.success) { setOriginal(config); setSavedMsg('Saved!'); setTimeout(() => setSavedMsg(null), 2000); } else if (res) { setSavedMsg('Error: ' + res.message); setTimeout(() => setSavedMsg(null), 4000); } } catch (e) { setSaving(false); setSavedMsg('Error: Invalid JSON in config'); setTimeout(() => setSavedMsg(null), 4000); } };
 
   return (
     <section style={{ padding: '0 32px 32px', display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -39,8 +37,6 @@ const ServerDetailPage = ({ server, onBack }: { server: InstalledServer; onBack:
 function App() {
   const [page, setPage] = React.useState<PageKey>('dashboard');
   const [selectedServer, setSelectedServer] = React.useState<InstalledServer | null>(null);
-  const ua = (navigator as Navigator & { userAgentData?: NavigatorUADataLike });
-  const arch = ua.userAgentData?.architecture ?? 'n/a';
 
   const showServers = () => { setSelectedServer(null); setPage('servers'); };
 

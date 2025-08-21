@@ -1,11 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { InstalledServer } from 'shared';
 
-interface InstalledServer {
-  appId: string;
-  name: string;
-  path: string;
-  installedAt: number;
-}
+
 
 interface InstalledServersProps {
   onManage: (server: InstalledServer) => void;
@@ -16,7 +12,7 @@ const InstalledServers: React.FC<InstalledServersProps> = ({ onManage }) => {
 
   useEffect(() => {
     const fetchServers = async () => {
-      const installed = await window.electronAPI.getInstalledServers();
+      const installed = await window.electronAPI.steamcmdGetInstalledServers();
       setServers(installed);
     };
     fetchServers();

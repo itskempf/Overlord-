@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { InstalledServer } from '../components/InstalledServers';
+import { InstalledServer } from 'shared';
 
 interface BackupManagerProps {
   server: InstalledServer;

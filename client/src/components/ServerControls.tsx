@@ -15,12 +15,20 @@ const ServerControls: React.FC<ServerControlsProps> = ({ selectedPath }) => {
 
   const handleStartServer = async () => {
     if (selectedPath) {
-      await window.electronAPI.startServer(selectedPath);
+      const result = await window.electronAPI.startServer(selectedPath);
+      if (!result.success) {
+        console.error("Failed to start server:", result.message);
+        // Optionally, update UI to show error message
+      }
     }
   };
 
   const handleStopServer = async () => {
-    await window.electronAPI.stopServer();
+    const result = await window.electronAPI.stopServer();
+    if (!result.success) {
+      console.error("Failed to stop server:", result.message);
+      // Optionally, update UI to show error message
+    }
   };
 
   const isServerRunning = serverStatus === 'Online';

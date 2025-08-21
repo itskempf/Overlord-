@@ -18,7 +18,7 @@ const GameInstaller: React.FC = () => {
     setIsError(false);
 
     try {
-      const result = await window.electronAPI.installGameServer(appId);
+      const result = await window.electronAPI.steamcmdInstallGame(appId);
       if (result.success) {
         setMessage(result.message);
         setIsError(false);
