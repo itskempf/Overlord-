@@ -19,14 +19,16 @@ declare global {
 
     // SteamCMD Functions
   getSteamCMDPath: () => Promise<string | undefined>;
-  setSteamCMDPath: (path: string) => Promise<{ success: boolean }>;
+  setSteamCMDPath: () => Promise<{ success: boolean; message?: string }>;
   getInstalledServers: () => Promise<InstalledServer[]>;
     steamcmdInstallGame: (appId: string) => Promise<{ success: boolean; message: string }>;
     downloadSteamCMD: () => Promise<{ success: boolean; message: string }>; // Added this based on preload.js
 
-    // App Data Management Functions
-    openAppDataFolder: () => void;
-    clearApplicationCache: () => Promise<{ success: boolean; message?: string }>;
+  // App Data Management Functions
+  openAppDataFolder: () => void; // legacy
+  clearApplicationCache: () => Promise<{ success: boolean; message?: string }>; // legacy
+  openAppData: () => Promise<string>; // returns path or '' per shell.openPath
+  clearCache: () => Promise<{ success: boolean; message?: string }>;
 
     // Backup Functions
     createBackup: (server: InstalledServer) => Promise<{ success: boolean; message: string }>;

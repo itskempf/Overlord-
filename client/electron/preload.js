@@ -23,5 +23,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   createTask: (task) => ipcRenderer.invoke('tasks:create', task),
   deleteTask: (taskId) => ipcRenderer.invoke('tasks:delete', taskId),
   openAppDataFolder: () => ipcRenderer.invoke('app:openAppDataFolder'),
-  clearApplicationCache: () => ipcRenderer.invoke('app:clearCache')
+  clearApplicationCache: () => ipcRenderer.invoke('app:clearCache'),
+
+  // Settings (new API)
+  setSteamCMDPath: () => ipcRenderer.invoke('settings:setSteamCMDPath'),
+  openAppData: () => ipcRenderer.invoke('settings:openAppData'),
+  clearCache: () => ipcRenderer.invoke('settings:clearCache')
 });

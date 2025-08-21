@@ -12,39 +12,32 @@ const SettingsPage: React.FC = () => {
     });
   }, []);
 
-  const handleOpenAppData = () => {
-    window.electronAPI.openAppDataFolder();
+  const handleOpenAppData = async () => {
+    await window.electronAPI.openAppData();
     toast.success('Opened App Data Folder');
   };
 
   const handleClearCache = async () => {
-    const promise = window.electronAPI.clearApplicationCache();
+    const promise = window.electronAPI.clearCache();
     toast.promise(promise, {
       loading: 'Clearing cache...',
-      success: (result) => {
-        if (result.success) {
-          return 'Application cache cleared!';
-        } else {
-          throw new Error(`Failed to clear cache: ${result.message}`);
-        }
-      },
+      success: 'Application cache cleared!',
       error: (err) => `Failed to clear cache: ${err.message}`,
     });
   };
 
   const handleSetSteamCmdPath = async () => {
-    const promise = window.electronAPI.setSteamCMDPath(steamCmdPath);
+    const promise = window.electronAPI.setSteamCMDPath();
     toast.promise(promise, {
       loading: 'Updating SteamCMD path...',
-      success: (result) => {
-        if (result.success) {
-          return 'SteamCMD path updated!';
-        } else {
-          throw new Error('Failed to update SteamCMD path.');
-        }
-      },
+      success: 'SteamCMD path updated!',
       error: (err) => `Failed to update SteamCMD path: ${err.message}`,
     });
+    const res = await promise;
+    if (res?.success) {
+      const path = await window.electronAPI.getSteamCMDPath();
+      if (path) setSteamCmdPath(path);
+    }
   };
 
   return (
@@ -54,18 +47,12 @@ const SettingsPage: React.FC = () => {
       <section className="mb-6">
         <h2 className="text-xl font-semibold mb-2">SteamCMD Path</h2>
         <div className="flex items-center space-x-2">
-          <input
-            type="text"
-            className="border p-2 rounded w-full"
-            value={steamCmdPath}
-            onChange={(e) => setSteamCmdPath(e.target.value)}
-            placeholder="Path to steamcmd.exe"
-          />
+          <input type="text" readOnly className="border p-2 rounded w-full bg-gray-700 text-white" value={steamCmdPath} placeholder="Path to steamcmd.exe" />
           <button
             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
             onClick={handleSetSteamCmdPath}
           >
-            Set Path
+            Change Path...
           </button>
         </div>
         <p className="text-sm text-gray-500 mt-1">Current path: {steamCmdPath || 'Not set'}</p>

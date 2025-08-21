@@ -204,15 +204,67 @@ ipcMain.handle('tasks:delete', (event, taskId) => {
 
 // App Data Management
 ipcMain.handle('app:openAppDataFolder', () => {
-    shell.openPath(app.getPath('userData'));
+  shell.openPath(app.getPath('userData'));
 });
 
 ipcMain.handle('app:clearCache', async () => {
-    try {
-        const session = mainWindow.webContents.session;
-        await session.clearCache();
-        return { success: true, message: 'Cache cleared successfully.' };
-    } catch (error) {
-        return { success: false, message: `Failed to clear cache: ${error.message}` };
+  try {
+    const session = mainWindow.webContents.session;
+    await session.clearCache();
+    return { success: true, message: 'Cache cleared successfully.' };
+  } catch (error) {
+    return { success: false, message: `Failed to clear cache: ${error.message}` };
+  }
+});
+
+// --- SETTINGS ENGINE ---
+// Let the user pick steamcmd.exe and store its path
+ipcMain.handle('settings:setSteamCMDPath', async () => {
+  try {
+    const { canceled, filePaths } = await dialog.showOpenDialog(mainWindow, {
+      title: 'Select steamcmd.exe',
+      properties: ['openFile'],
+      filters: [{ name: 'SteamCMD Executable', extensions: ['exe'] }]
+    });
+    if (canceled || !filePaths || filePaths.length === 0) {
+      return { success: false, message: 'No file selected.' };
     }
+    const selectedPath = filePaths[0];
+    const filename = path.basename(selectedPath).toLowerCase();
+    if (filename !== 'steamcmd.exe') {
+      return { success: false, message: 'Please select steamcmd.exe.' };
+    }
+    store.set('steamcmdPath', selectedPath);
+    return { success: true, message: 'SteamCMD path saved.' };
+  } catch (error) {
+    return { success: false, message: `Failed to set SteamCMD path: ${error.message}` };
+  }
+});
+
+// Open application data directory
+ipcMain.handle('settings:openAppData', () => {
+  return shell.openPath(app.getPath('userData'));
+});
+
+// Clear application data (delete contents of userData directory, not the directory itself)
+ipcMain.handle('settings:clearCache', async () => {
+  try {
+    const userDataPath = app.getPath('userData');
+    const entries = fs.readdirSync(userDataPath, { withFileTypes: true });
+    for (const entry of entries) {
+      try {
+        const fullPath = path.join(userDataPath, entry.name);
+        if (entry.isDirectory()) {
+          fs.rmSync(fullPath, { recursive: true, force: true });
+        } else {
+          fs.rmSync(fullPath, { force: true });
+        }
+      } catch (e) {
+        // continue on individual item failure
+      }
+    }
+    return { success: true, message: 'Application data cleared.' };
+  } catch (error) {
+    return { success: false, message: `Failed to clear application data: ${error.message}` };
+  }
 });
