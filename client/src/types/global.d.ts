@@ -1,5 +1,13 @@
 import type { InstalledServer } from 'shared';
 
+type TaskType = 'backup' | 'restart';
+interface ScheduledTask {
+  id: string;
+  serverName: string;
+  type: TaskType;
+  schedule: string;
+}
+
 declare global {
   interface ElectronAPI {
     // MVP Functions
@@ -12,7 +20,7 @@ declare global {
     // SteamCMD Functions
   getSteamCMDPath: () => Promise<string | undefined>;
   setSteamCMDPath: (path: string) => Promise<{ success: boolean }>;
-  getInstalledServers: () => Promise<any[]>; // Assuming any[] for now, will be more specific later if needed
+  getInstalledServers: () => Promise<InstalledServer[]>;
     steamcmdInstallGame: (appId: string) => Promise<{ success: boolean; message: string }>;
     downloadSteamCMD: () => Promise<{ success: boolean; message: string }>; // Added this based on preload.js
 
@@ -29,9 +37,9 @@ declare global {
     readConfigFile: (serverPath: string) => Promise<Record<string, string> | { error: string }>;
     writeConfigFile: (serverPath: string, content: Record<string, string>) => Promise<{ success: boolean; message: string }>;
 
-    // Task Management Functions
-    listTasks: () => Promise<any[]>;
-    createTask: (task: any) => Promise<{ success: boolean; message: string }>;
+  // Task Management Functions
+  listTasks: () => Promise<ScheduledTask[]>;
+  createTask: (task: { serverName: string; type: TaskType; schedule: string }) => Promise<{ success: boolean; message: string }>;
     deleteTask: (taskId: string) => Promise<{ success: boolean; message: string }>;
   }
   interface Window { electronAPI: ElectronAPI }

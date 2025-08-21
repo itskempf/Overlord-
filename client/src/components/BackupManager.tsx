@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import type { InstalledServer } from 'shared';
 import toast from 'react-hot-toast';
 
@@ -10,14 +10,14 @@ const BackupManager: React.FC<BackupManagerProps> = ({ server }) => {
   const [backups, setBackups] = useState<string[]>([]);
   const [status, setStatus] = useState<string>('Idle');
 
-  const fetchBackups = async () => {
+  const fetchBackups = useCallback(async () => {
     const fetchedBackups = await window.electronAPI.listBackups(server.name);
     setBackups(fetchedBackups);
-  };
+  }, [server.name]);
 
   useEffect(() => {
     fetchBackups();
-  }, [server]);
+  }, [fetchBackups]);
 
   const handleCreateBackup = async () => {
     setStatus('Backing up...');
@@ -32,25 +32,28 @@ const BackupManager: React.FC<BackupManagerProps> = ({ server }) => {
   };
 
   const handleRestoreBackup = async (backupFileName: string) => {
-    toast.promise(new Promise(async (resolve, reject) => {
-      if (window.confirm(`Are you sure you want to restore from ${backupFileName}? This will overwrite your current server files.`)) {
-        setStatus('Restoring...');
-        const result = await window.electronAPI.restoreBackup(server, backupFileName);
-        if (result.success) {
-          resolve('Backup restored successfully!');
-        } else {
-          reject(new Error(`Error restoring backup: ${result.message}`));
-        }
-      } else {
-        reject(new Error('Restore cancelled.'));
-      }
-    }), {
+    if (!window.confirm(`Are you sure you want to restore from ${backupFileName}? This will overwrite your current server files.`)) {
+      toast.error('Restore cancelled.');
+      return;
+    }
+    setStatus('Restoring...');
+    const promise = window.electronAPI
+      .restoreBackup(server, backupFileName)
+      .then((result) => {
+        if (!result.success) throw new Error(`Error restoring backup: ${result.message}`);
+        return result;
+      });
+    toast.promise(promise, {
       loading: 'Restoring backup...',
       success: 'Backup restored successfully!',
       error: (err) => err.message,
     });
+    try {
+      await promise;
+    } finally {
+      setStatus('Idle');
+    }
   };
-
   const isDisabled = status !== 'Idle';
 
   return (

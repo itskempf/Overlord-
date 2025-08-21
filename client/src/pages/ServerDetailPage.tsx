@@ -45,8 +45,9 @@ const ServerDetailPage: React.FC<ServerDetailPageProps> = ({ server, onBack }) =
       } else {
         setSaveMessage(`Error: ${result.message}`);
       }
-    } catch (error: any) {
-      setSaveMessage(`Error: ${error.message}`);
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : String(error);
+      setSaveMessage(`Error: ${msg}`);
     } finally {
       setIsSaving(false);
       setTimeout(() => setSaveMessage(null), 3000); // Clear message after 3 seconds
