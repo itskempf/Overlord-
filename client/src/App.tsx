@@ -4,6 +4,8 @@ import Sidebar, { type PageKey } from './components/Sidebar';
 import { type InstalledServer } from 'shared';
 import ServersPage from './pages/ServersPage';
 import Dashboard from './components/Dashboard';
+import SettingsPage from './pages/SettingsPage';
+import { Toaster } from 'react-hot-toast';
 
 const ServerDetailPage = ({ server, onBack }: { server: InstalledServer; onBack: () => void }) => {
   const [original, setOriginal] = React.useState('');
@@ -40,8 +42,16 @@ function App() {
 
   const showServers = () => { setSelectedServer(null); setPage('servers'); };
 
-  const content = selectedServer ? <ServerDetailPage server={selectedServer} onBack={showServers} /> : (page === 'dashboard' ? <Dashboard /> : <ServersPage onManage={(s) => setSelectedServer(s)} />);
-  const title = selectedServer ? selectedServer.name : (page === 'dashboard' ? 'Dashboard' : 'Servers');
+  const content = selectedServer ? <ServerDetailPage server={selectedServer} onBack={showServers} /> : (
+    page === 'dashboard' ? <Dashboard /> :
+    page === 'servers' ? <ServersPage onManage={(s) => setSelectedServer(s)} /> :
+    page === 'settings' ? <SettingsPage /> : null
+  );
+  const title = selectedServer ? selectedServer.name : (
+    page === 'dashboard' ? 'Dashboard' :
+    page === 'servers' ? 'Servers' :
+    page === 'settings' ? 'Settings' : ''
+  );
 
   return (
     <div className="app-shell">
@@ -50,6 +60,7 @@ function App() {
         <header className="main-header"><h1 className="page-title">{title}</h1></header>
         {content}
       </main>
+      <Toaster />
     </div>
   );
 }

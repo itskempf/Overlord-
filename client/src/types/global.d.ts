@@ -10,9 +10,14 @@ declare global {
     onServerLog: (callback: (log: string) => void) => void;
 
     // SteamCMD Functions
-    steamcmdGetPath: () => Promise<string | undefined>;
-        listInstalledServers: () => Promise<any[]>;
+    getSteamCMDPath: () => Promise<string | undefined>;
+    setSteamCMDPath: (path: string) => Promise<{ success: boolean }>;
+    getInstalledServers: () => Promise<any[]>;
     steamcmdInstallGame: (appId: string) => Promise<{ success: boolean; message: string }>;
+
+    // App Data Management Functions
+    openAppDataFolder: () => void;
+    clearApplicationCache: () => Promise<{ success: boolean; message?: string }>;
 
     // Backup Functions
     createBackup: (server: InstalledServer) => Promise<{ success: boolean; message: string }>;

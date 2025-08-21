@@ -1,37 +1,28 @@
 import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 
 const GameInstaller: React.FC = () => {
   const [appId, setAppId] = useState<string>('');
-  const [isInstalling, setIsInstalling] = useState<boolean>(false);
-  const [message, setMessage] = useState<string | null>(null);
-  const [isError, setIsError] = useState<boolean>(false);
 
   const handleInstall = async () => {
     if (!appId) {
-      setMessage('Please enter a Steam App ID.');
-      setIsError(true);
+      toast.error('Please enter a Steam App ID.');
       return;
     }
 
-    setIsInstalling(true);
-    setMessage('Installation in progress...');
-    setIsError(false);
+    const promise = window.electronAPI.steamcmdInstallGame(appId);
 
-    try {
-      const result = await window.electronAPI.steamcmdInstallGame(appId);
-      if (result.success) {
-        setMessage(result.message);
-        setIsError(false);
-      } else {
-        setMessage(result.message);
-        setIsError(true);
-      }
-    } catch (error: any) {
-      setMessage(`Error: ${error.message}`);
-      setIsError(true);
-    } finally {
-      setIsInstalling(false);
-    }
+    toast.promise(promise, {
+      loading: 'Installation in progress...',
+      success: (result) => {
+        if (result.success) {
+          return result.message;
+        } else {
+          throw new Error(result.message);
+        }
+      },
+      error: (err) => `Error: ${err.message}`,
+    });
   };
 
   return (
@@ -44,21 +35,14 @@ const GameInstaller: React.FC = () => {
           value={appId}
           onChange={(e) => setAppId(e.target.value)}
           className="p-2 rounded-md bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          disabled={isInstalling}
         />
         <button
           onClick={handleInstall}
-          disabled={isInstalling}
-          className={`px-4 py-2 rounded-md ${isInstalling ? 'bg-gray-600 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'} text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50`}
+          className={`px-4 py-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50`}
         >
-          {isInstalling ? 'Installing...' : 'Install/Update Server'}
+          Install/Update Server
         </button>
       </div>
-      {message && (
-        <p className={`mt-4 text-sm ${isError ? 'text-red-400' : 'text-green-400'}`}>
-          {message}
-        </p>
-      )}
     </div>
   );
 };

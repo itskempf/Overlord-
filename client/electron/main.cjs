@@ -1,5 +1,5 @@
 // This is the main process for our Electron app.
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
 const Store = require('electron-store');
 const { spawn } = require('child_process');
@@ -110,7 +110,10 @@ ipcMain.handle('dialog:openFile', async () => {
 
 // Process Management
 ipcMain.handle('server:start', (event, filePath) => {
-    // ... implementation from previous steps ...
+    if (!fs.existsSync(filePath)) {
+        return { success: false, message: `Executable not found at: ${filePath}` };
+    }
+    // ... existing implementation ...
 });
 ipcMain.handle('server:stop', () => {
     // ... implementation from previous steps ...
@@ -138,6 +141,10 @@ ipcMain.handle('server:writeConfig', (event, serverPath, content) => {
 
 // SteamCMD Management
 ipcMain.handle('steamcmd:getPath', () => store.get('steamcmdPath'));
+ipcMain.handle('steamcmd:setPath', (event, path) => {
+    store.set('steamcmdPath', path);
+    return { success: true };
+});
 ipcMain.handle('steamcmd:getInstalledServers', () => store.get('installedServers', []));
 ipcMain.handle('steamcmd:installGame', async (event, appId) => {
     // ... implementation from previous steps ...
@@ -153,7 +160,28 @@ ipcMain.handle('server:listBackups', (event, serverName) => {
     return fs.readdirSync(backupsDir).filter(file => file.endsWith('.zip'));
 });
 ipcMain.handle('server:restoreBackup', async (event, server, backupFileName) => {
-    // ... implementation from previous steps ...
+    if (serverProcess && serverProcess.pid) {
+        return { success: false, message: 'Cannot restore backup while server is running. Please stop the server first.' };
+    }
+    const backupsDir = path.join(app.getPath('userData'), 'backups', server.name);
+    const backupPath = path.join(backupsDir, backupFileName);
+    const serverPath = server.path;
+
+    try {
+        // Ensure the server directory exists
+        if (!fs.existsSync(serverPath)) {
+            fs.mkdirSync(serverPath, { recursive: true });
+        }
+
+        // Clear existing server files (optional, but safer for a clean restore)
+        // This is a dangerous operation, consider user confirmation or more granular control
+        // For now, we'll just extract over existing files.
+
+        await extract(backupPath, { dir: serverPath });
+        return { success: true, message: 'Backup restored successfully.' };
+    } catch (error) {
+        return { success: false, message: `Failed to restore backup: ${error.message}` };
+    }
 });
 
 // Scheduled Tasks
@@ -172,4 +200,19 @@ ipcMain.handle('tasks:delete', (event, taskId) => {
     store.set('scheduledTasks', tasks);
     initializeScheduler(); // Reload all jobs
     return { success: true, message: 'Task deleted.' };
+});
+
+// App Data Management
+ipcMain.handle('app:openAppDataFolder', () => {
+    shell.openPath(app.getPath('userData'));
+});
+
+ipcMain.handle('app:clearCache', async () => {
+    try {
+        const session = mainWindow.webContents.session;
+        await session.clearCache();
+        return { success: true, message: 'Cache cleared successfully.' };
+    } catch (error) {
+        return { success: false, message: `Failed to clear cache: ${error.message}` };
+    }
 });

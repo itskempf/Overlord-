@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { InstalledServer } from 'shared';
+import toast from 'react-hot-toast';
 
 interface BackupManagerProps {
   server: InstalledServer;
@@ -20,27 +21,47 @@ const BackupManager: React.FC<BackupManagerProps> = ({ server }) => {
 
   const handleCreateBackup = async () => {
     setStatus('Backing up...');
-    const result = await window.electronAPI.createBackup(server);
-    if (result.success) {
-      setStatus('Backup created successfully!');
-      fetchBackups(); // Refresh list
-    } else {
-      setStatus(`Error creating backup: ${result.message}`);
-    }
-    setTimeout(() => setStatus('Idle'), 3000);
+    const promise = window.electronAPI.createBackup(server);
+    toast.promise(promise, {
+      loading: 'Creating backup...',
+      success: (result) => {
+        if (result.success) {
+          fetchBackups(); // Refresh list
+          return 'Backup created successfully!';
+        } else {
+          throw new Error(`Error creating backup: ${result.message}`);
+        }
+      },
+      error: (err) => `Error creating backup: ${err.message}`,
+    });
+    await promise; // Wait for the promise to resolve/reject before setting status back to Idle
+    setStatus('Idle');
   };
 
   const handleRestoreBackup = async (backupFileName: string) => {
-    if (window.confirm(`Are you sure you want to restore from ${backupFileName}? This will overwrite your current server files.`)) {
-      setStatus('Restoring...');
-      const result = await window.electronAPI.restoreBackup(server, backupFileName);
-      if (result.success) {
-        setStatus('Backup restored successfully!');
+    toast.promise(new Promise(async (resolve, reject) => {
+      if (window.confirm(`Are you sure you want to restore from ${backupFileName}? This will overwrite your current server files.`)) {
+        setStatus('Restoring...');
+        const result = await window.electronAPI.restoreBackup(server, backupFileName);
+        if (result.success) {
+          resolve('Backup restored successfully!');
+        } else {
+          reject(new Error(`Error restoring backup: ${result.message}`));
+        }
       } else {
-        setStatus(`Error restoring backup: ${result.message}`);
+        reject(new Error('Restore cancelled.'));
       }
-      setTimeout(() => setStatus('Idle'), 3000);
-    }
+    }), {
+      loading: 'Restoring backup...',
+      success: (msg) => {
+        setStatus('Idle');
+        return msg;
+      },
+      error: (err) => {
+        setStatus('Idle');
+        return err.message;
+      },
+    });
   };
 
   const isDisabled = status !== 'Idle';

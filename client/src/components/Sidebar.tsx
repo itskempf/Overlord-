@@ -1,6 +1,6 @@
 import React from 'react';
 
-export type PageKey = 'dashboard' | 'servers';
+export type PageKey = 'dashboard' | 'servers' | 'settings';
 
 interface SidebarProps {
   current: PageKey;
@@ -19,7 +19,7 @@ const Sidebar: React.FC<SidebarProps> = ({ current, onNavigate }) => {
           <li className="nav-section">Management</li>
           <li><button disabled>Workshop</button></li>
           <li><button disabled>Backups</button></li>
-          <li><button disabled>Settings</button></li>
+          <li><button className={current==='settings'? 'active': ''} onClick={() => onNavigate('settings')}>Settings</button></li>
         </ul>
       </nav>
       <div className="sidebar-footer">

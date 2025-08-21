@@ -22,6 +22,9 @@ The core philosophy is to provide a tool that's easy enough for a casual gamer t
 * **Server Management:** Start, stop, and monitor your server processes.
 * **Smart Config Editor:** A user-friendly form for editing server config files, not just a plain text box.
 * **Backup & Restore System:** Create and restore backups of your server files to prevent data loss.
+* **Dedicated Settings Page:** Manage application settings, including SteamCMD path and application data.
+* **Enhanced User Feedback:** Non-blocking toast notifications for all operations.
+* **Loading Indicators:** Visual feedback during long-running tasks like installations and backups.
 
 ---
 
