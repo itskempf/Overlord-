@@ -11,7 +11,7 @@ declare global {
 
     // SteamCMD Functions
     steamcmdGetPath: () => Promise<string | undefined>;
-    steamcmdGetInstalledServers: () => Promise<InstalledServer[]>;
+        listInstalledServers: () => Promise<any[]>;
     steamcmdInstallGame: (appId: string) => Promise<{ success: boolean; message: string }>;
 
     // Backup Functions
@@ -22,6 +22,11 @@ declare global {
     // Config Editor Functions
     readConfigFile: (serverPath: string) => Promise<Record<string, string> | { error: string }>;
     writeConfigFile: (serverPath: string, content: Record<string, string>) => Promise<{ success: boolean; message: string }>;
+
+    // Task Management Functions (NEW)
+    listTasks: () => Promise<any[]>; // Assuming 'any[]' for now, can define a more specific type later
+    createTask: (task: any) => Promise<{ success: boolean; message: string }>; // Assuming 'any' for now
+    deleteTask: (taskId: string) => Promise<{ success: boolean; message: string }>;
   }
   interface Window { electronAPI: ElectronAPI }
 }

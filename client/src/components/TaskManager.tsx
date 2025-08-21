@@ -1,149 +1,162 @@
 import React, { useState, useEffect } from 'react';
-import { InstalledServer } from 'shared';
 
-// Define the ScheduledTask interface
 interface ScheduledTask {
   id: string;
-  serverId: string;
   serverName: string;
-  taskType: 'Backup' | 'Restart';
+  type: 'backup' | 'restart';
   schedule: string;
 }
 
+interface InstalledServer {
+  name: string;
+  path: string;
+  appId?: string;
+}
+
 const TaskManager: React.FC = () => {
-  // 1. STATE:
-  const [scheduledTasks, setScheduledTasks] = useState<ScheduledTask[]>([]);
-  const [selectedServerId, setSelectedServerId] = useState<string>('');
-  const [taskType, setTaskType] = useState<'Backup' | 'Restart'>('Backup');
-  const [scheduleString, setScheduleString] = useState<string>('');
-  const [installedServers, setInstalledServers] = useState<InstalledServer[]>([]);
+  const [tasks, setTasks] = useState<ScheduledTask[]>([]);
+  const [servers, setServers] = useState<InstalledServer[]>([]);
+  const [selectedServer, setSelectedServer] = useState<string>('');
+  const [taskType, setTaskType] = useState<'backup' | 'restart'>('backup');
+  const [schedule, setSchedule] = useState<string>('');
+  const [status, setStatus] = useState<string>('');
 
-  // 2. INITIAL LOAD (useEffect):
+  const fetchTasks = async () => {
+    const fetchedTasks = await window.electronAPI.listTasks();
+    setTasks(fetchedTasks);
+  };
+
+  const fetchServers = async () => {
+    const fetchedServers = await window.electronAPI.listInstalledServers();
+    setServers(fetchedServers);
+    if (fetchedServers.length > 0) {
+      setSelectedServer(fetchedServers[0].name);
+    }
+  };
+
   useEffect(() => {
-    const fetchTasksAndServers = async () => {
-      // Fetch scheduled tasks
-      const tasks = await window.electronAPI.listTasks();
-      setScheduledTasks(tasks);
-
-      // Fetch installed servers
-      const servers = await window.electronAPI.steamcmdGetInstalledServers();
-      setInstalledServers(servers);
-      if (servers.length > 0) {
-        setSelectedServerId(servers[0].appId); // Select the first server by default
-      }
-    };
-    fetchTasksAndServers();
+    fetchTasks();
+    fetchServers();
   }, []);
 
-  // 3. FUNCTIONS:
   const handleCreateTask = async () => {
-    if (!selectedServerId || !scheduleString) {
-      alert('Please select a server and provide a schedule.');
+    if (!selectedServer || !schedule) {
+      setStatus('Please select a server and enter a schedule.');
       return;
     }
 
-    const server = installedServers.find(s => s.appId === selectedServerId);
-    if (!server) {
-      alert('Selected server not found.');
-      return;
+    // Basic cron validation (more robust validation might be needed)
+    const cronRegex = /^(\*|\d+|\d+-\d+)( \*|\d+|\d+-\d+){4}$/;
+    if (!cronRegex.test(schedule)) {
+        setStatus('Invalid cron schedule format. Example: * * * * *');
+        return;
     }
 
-    const newTask: Omit<ScheduledTask, 'id'> = {
-      serverId: selectedServerId,
-      serverName: server.name,
-      taskType,
-      schedule: scheduleString,
-    };
+    const result = await window.electronAPI.createTask({
+      serverName: selectedServer,
+      type: taskType,
+      schedule: schedule,
+    });
 
-    await window.electronAPI.createTask(newTask);
-    // Refresh the task list after creation
-    const updatedTasks = await window.electronAPI.listTasks();
-    setScheduledTasks(updatedTasks);
-
-    // Clear form
-    setScheduleString('');
-  };
-
-  const handleDeleteTask = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this task?')) {
-      await window.electronAPI.deleteTask(id);
-      // Refresh the task list after deletion
-      const updatedTasks = await window.electronAPI.listTasks();
-      setScheduledTasks(updatedTasks);
+    if (result.success) {
+      setStatus('Task created successfully!');
+      setSchedule(''); // Clear form
+      fetchTasks(); // Refresh list
+    } else {
+      setStatus(`Error creating task: ${result.message}`);
     }
   };
 
-  // 4. RENDER LOGIC:
+  const handleDeleteTask = async (taskId: string) => {
+    const result = await window.electronAPI.deleteTask(taskId);
+    if (result.success) {
+      setStatus('Task deleted successfully!');
+      fetchTasks(); // Refresh list
+    } else {
+      setStatus(`Error deleting task: ${result.message}`);
+    }
+  };
+
   return (
-    <div className="p-4 bg-gray-800 rounded-lg shadow-md text-white">
-      <h2 className="text-xl font-semibold mb-4">Scheduled Tasks</h2>
+    <div className="p-4 bg-gray-800 text-white rounded-lg shadow-lg">
+      <h2 className="text-2xl font-bold mb-4">Scheduled Tasks</h2>
 
-      {/* Task Creation Form */}
+      {status && <p className="mb-4 text-yellow-500">{status}</p>}
+
       <div className="mb-6 p-4 border border-gray-700 rounded-md">
-        <h3 className="text-lg font-medium mb-3">Schedule New Task</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <h3 className="text-xl font-semibold mb-3">Schedule New Task</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label htmlFor="server-select" className="block text-sm font-medium text-gray-300 mb-1">Select Server:</label>
+            <label htmlFor="server-select" className="block text-sm font-medium text-gray-300 mb-1">
+              Select Server:
+            </label>
             <select
               id="server-select"
-              className="w-full p-2 rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={selectedServerId}
-              onChange={(e) => setSelectedServerId(e.target.value)}
+              className="w-full p-2 rounded-md bg-gray-700 border border-gray-600 focus:ring focus:ring-blue-500 focus:border-blue-500"
+              value={selectedServer}
+              onChange={(e) => setSelectedServer(e.target.value)}
             >
-              {installedServers.map((server) => (
-                <option key={server.appId} value={server.appId}>
-                  {server.name} ({server.appId})
+              {servers.map((server) => (
+                <option key={server.name} value={server.name}>
+                  {server.name}
                 </option>
               ))}
             </select>
           </div>
           <div>
-            <label htmlFor="task-type" className="block text-sm font-medium text-gray-300 mb-1">Task Type:</label>
+            <label htmlFor="task-type" className="block text-sm font-medium text-gray-300 mb-1">
+              Task Type:
+            </label>
             <select
               id="task-type"
-              className="w-full p-2 rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-2 rounded-md bg-gray-700 border border-gray-600 focus:ring focus:ring-blue-500 focus:border-blue-500"
               value={taskType}
-              onChange={(e) => setTaskType(e.target.value as 'Backup' | 'Restart')}
+              onChange={(e) => setTaskType(e.target.value as 'backup' | 'restart')}
             >
-              <option value="Backup">Backup</option>
-              <option value="Restart">Restart</option>
+              <option value="backup">Backup</option>
+              <option value="restart">Restart</option>
             </select>
           </div>
         </div>
-        <div className="mb-4">
-          <label htmlFor="schedule-string" className="block text-sm font-medium text-gray-300 mb-1">Cron Schedule (e.g., '0 3 * * *'):</label>
+        <div className="mt-4">
+          <label htmlFor="schedule-input" className="block text-sm font-medium text-gray-300 mb-1">
+            Cron Schedule:
+          </label>
           <input
             type="text"
-            id="schedule-string"
-            className="w-full p-2 rounded-md bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            id="schedule-input"
+            className="w-full p-2 rounded-md bg-gray-700 border border-gray-600 focus:ring focus:ring-blue-500 focus:border-blue-500"
             placeholder="e.g., 0 3 * * * (daily at 3 AM)"
-            value={scheduleString}
-            onChange={(e) => setScheduleString(e.target.value)}
+            value={schedule}
+            onChange={(e) => setSchedule(e.target.value)}
           />
+          <p className="text-xs text-gray-400 mt-1">
+            Format: minute hour day_of_month month day_of_week (e.g., '0 3 * * *' for daily at 3 AM)
+          </p>
         </div>
         <button
+          className="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition duration-300 ease-in-out"
           onClick={handleCreateTask}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
         >
           Schedule New Task
         </button>
       </div>
 
-      {/* List of Scheduled Tasks */}
-      <h3 className="text-lg font-medium mb-3">Current Scheduled Tasks</h3>
-      {scheduledTasks.length === 0 ? (
+      <h3 className="text-xl font-semibold mb-3">Current Scheduled Tasks</h3>
+      {tasks.length === 0 ? (
         <p className="text-gray-400">No tasks scheduled yet.</p>
       ) : (
         <ul className="space-y-3">
-          {scheduledTasks.map((task) => (
+          {tasks.map((task) => (
             <li key={task.id} className="flex justify-between items-center bg-gray-700 p-3 rounded-md">
               <div>
-                <p className="font-medium">{task.serverName} - {task.taskType}</p>
-                <p className="text-sm text-gray-400">Schedule: {task.schedule}</p>
+                <p className="font-medium">{task.serverName}</p>
+                <p className="text-sm text-gray-300">Type: {task.type}</p>
+                <p className="text-sm text-gray-300">Schedule: {task.schedule}</p>
               </div>
               <button
+                className="bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-3 rounded-md transition duration-300 ease-in-out"
                 onClick={() => handleDeleteTask(task.id)}
-                className="px-3 py-1 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
               >
                 Delete
               </button>

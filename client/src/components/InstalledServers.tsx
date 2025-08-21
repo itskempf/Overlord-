@@ -12,7 +12,7 @@ const InstalledServers: React.FC<InstalledServersProps> = ({ onManage }) => {
 
   useEffect(() => {
     const fetchServers = async () => {
-      const installed = await window.electronAPI.steamcmdGetInstalledServers();
+      const installed = await window.electronAPI.listInstalledServers();
       setServers(installed);
     };
     fetchServers();

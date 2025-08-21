@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { InstalledServer } from 'shared';
 import BackupManager from '../components/BackupManager';
+import TaskManager from '../components/TaskManager'; // Added import
 
 interface ServerDetailPageProps {
   server: InstalledServer;
@@ -95,6 +96,9 @@ const ServerDetailPage: React.FC<ServerDetailPageProps> = ({ server, onBack }) =
       </div>
       <div className="mt-8">
         <BackupManager server={server} />
+      </div>
+      <div className="mt-8">
+        <TaskManager /> {/* Corrected to single instance */}
       </div>
     </div>
   );
