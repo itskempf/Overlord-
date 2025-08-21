@@ -1,17 +1,38 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 
-const ServerSelector = ({ onSelected }: { onSelected?: (path: string | null) => void }) => {
-  const [filePath, setFilePath] = useState<string | null>(null);
-  const pick = async () => {
-    const selected = await window.electronAPI.selectServerFile();
-    setFilePath(selected);
-    onSelected?.(selected);
+interface ServerSelectorProps {
+  onSelected: (path: string | null) => void;
+}
+
+const ServerSelector: React.FC<ServerSelectorProps> = ({ onSelected }) => {
+  const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
+
+  const handleSelectFile = async () => {
+    try {
+      const filePath = await window.electronAPI.selectServerFile();
+      if (filePath) {
+        setSelectedFilePath(filePath);
+        onSelected(filePath);
+      }
+    } catch (error) {
+      console.error('Error selecting server file:', error);
+    }
   };
+
   return (
-    <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-      <button onClick={pick} style={{ alignSelf:'flex-start', background:'#2563eb', color:'#fff', border:0, padding:'6px 14px', borderRadius:6, fontWeight:600, cursor:'pointer' }}>Select Server Executable...</button>
-      <div style={{ fontSize:12, color:'#94a3b8' }}>Selected File: {filePath || 'None'}</div>
+    <div className="p-4 bg-gray-800 rounded-lg shadow-md">
+      <h2 className="text-xl font-semibold text-white mb-4">Server Selection</h2>
+      <button
+        onClick={handleSelectFile}
+        className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition duration-200 ease-in-out"
+      >
+        Select Server Executable...
+      </button>
+      <p className="mt-4 text-gray-300">
+        Selected File: <span className="font-medium text-white">{selectedFilePath || 'None'}</span>
+      </p>
     </div>
   );
 };
+
 export default ServerSelector;
