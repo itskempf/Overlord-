@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import type { InstalledServer } from 'shared';
 import toast from 'react-hot-toast';
+import { confirmToast } from './ConfirmToast';
 
 interface BackupManagerProps {
   server: InstalledServer;
@@ -32,10 +33,8 @@ const BackupManager: React.FC<BackupManagerProps> = ({ server }) => {
   };
 
   const handleRestoreBackup = async (backupFileName: string) => {
-    if (!window.confirm(`Are you sure you want to restore from ${backupFileName}? This will overwrite your current server files.`)) {
-      toast.error('Restore cancelled.');
-      return;
-    }
+    const ok = await confirmToast(`Restore ${backupFileName}? This will overwrite your current server files.`);
+    if (!ok) { toast('Restore cancelled.'); return; }
     setStatus('Restoring...');
     const promise = window.electronAPI
       .restoreBackup(server, backupFileName)
@@ -59,7 +58,7 @@ const BackupManager: React.FC<BackupManagerProps> = ({ server }) => {
   return (
     <div className="p-4 bg-gray-800 rounded-lg shadow-md text-white">
       <h2 className="text-xl font-semibold mb-4">Backup Manager</h2>
-      <p className="mb-4">Status: {status}</p>
+  <p className="mb-4 flex items-center gap-2">Status: {status} {status !== 'Idle' && (<span className="inline-block h-4 w-4 border-2 border-b-transparent rounded-full animate-spin" />)}</p>
 
       <button
         onClick={handleCreateBackup}

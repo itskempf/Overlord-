@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 
 const GameInstaller: React.FC = () => {
   const [appId, setAppId] = useState<string>('');
+  const [installing, setInstalling] = useState<boolean>(false);
 
   const handleInstall = async () => {
     if (!appId) {
@@ -10,19 +11,17 @@ const GameInstaller: React.FC = () => {
       return;
     }
 
-    const promise = window.electronAPI.steamcmdInstallGame(appId);
-
+    setInstalling(true);
+    const promise = window.electronAPI.steamcmdInstallGame(appId).then((res) => {
+      if (!res.success) throw new Error(res.message);
+      return res;
+    });
     toast.promise(promise, {
       loading: 'Installation in progress...',
-      success: (result) => {
-        if (result.success) {
-          return result.message;
-        } else {
-          throw new Error(result.message);
-        }
-      },
+      success: 'Installation completed!',
       error: (err) => `Error: ${err.message}`,
     });
+    try { await promise; } finally { setInstalling(false); }
   };
 
   return (
@@ -38,8 +37,10 @@ const GameInstaller: React.FC = () => {
         />
         <button
           onClick={handleInstall}
-          className={`px-4 py-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50`}
+          disabled={installing}
+          className={`px-4 py-2 rounded-md ${installing ? 'bg-gray-600 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'} text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 flex items-center gap-2`}
         >
+          {installing && <span className="inline-block h-4 w-4 border-2 border-b-transparent rounded-full animate-spin" />}
           Install/Update Server
         </button>
       </div>
