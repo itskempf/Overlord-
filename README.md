@@ -77,4 +77,4 @@ Please check out the open issues to see where you can help. If you have a great 
 
 ## License
 
-Distributed under the CC BY-NC-SA 4.0 License. See `LICENSE` for more information.
+Distributed under the GNU GPLv3 License. See `LICENSE` for more information.
